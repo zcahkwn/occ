@@ -15,18 +15,17 @@ def simulate_once(
     return set(elements_covered) == set(new_mpc.secret_set)
 
 
-def simulate_repeat(repeat: int, **kwargs) -> list[tuple[float, float | None]]:
+def simulate_repeat(repeat: int, **kwargs) -> list[bool]:
     """
     Simulate repeat times and return the results using Joblib for parallel processing.
     """
-    results = Parallel(n_jobs=-1)(
+    return Parallel(n_jobs=-1)(
         delayed(simulate_once)(**kwargs) for _ in range(repeat)
     )
-    return results  # type: ignore
 
 
 if __name__ == "__main__":
+    n = int(5e7)
     # Example usage
-    results = simulate_repeat(repeat=500, total_number=100, shard_sizes=[30, 90, 99])
-    print(results)
-    print(sum(results) / len(results))
+    results = simulate_repeat(repeat=n, total_number=10, shard_sizes=[7, 5, 3])
+    print(sum(results) / n)
