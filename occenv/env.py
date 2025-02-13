@@ -1,38 +1,25 @@
-import json
-from random import randrange, sample
-from occenv.constants import DATA_DIR
-
-
-with open (DATA_DIR/'dummy_20.json', 'r') as f:
-    data=json.load(f)
+from random import sample
 
 class DataShare:
-    def __init__(self, total_number):
+    def __init__(self, total_number: int):
         self.total_number = total_number
-        self.parties_num = 3
+        self.secret_set = range(total_number)  
 
-    def parties_number(self):
-        return self.parties_num
- 
-    def parties_size(self):
-        self.n_i=[randrange(1,self.total_number) for i in range(self.parties_number())]
-        return self.n_i
 
-    def create_shard(self,data):
-        shards = []
-        for size in self.n_i:
-            shard = sample(data, k=size)
-            shards.append(shard)
-        return shards
+    def create_shard(self, shard_size: int) -> list[int]:
+        # require shard_size <= total_number
+        assert shard_size <= self.total_number, "Shard size should be less than total number of data points"
+        # randomly sample shard_size data points from the secret set without replacement
+        return sample(self.secret_set, shard_size)
+
 
     
 if __name__ == "__main__":
-    ds = DataShare(len(data))
-    sizes = ds.parties_size()
-    print("Total number of data points:", ds.total_number)
-    print("Number of parties:", ds.parties_number())
-    print("Random sizes for each party:", sizes)
-    shards = ds.create_shard(data)
-    for i, shard in enumerate(shards, start=1):
-        print(f"Shard {i} (size {len(shard)}):", shard)
+    new_mpc = DataShare(100)
+    alice_shard = new_mpc.create_shard(30)
+    bob_shard = new_mpc.create_shard(40)
+    charlie_shard = new_mpc.create_shard(50)
+    # check whether collusion can be successiful
+    set(alice_shard + bob_shard + charlie_shard) == set(new_mpc.secret_set)
 
+    
