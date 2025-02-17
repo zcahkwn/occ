@@ -16,7 +16,7 @@ def collude_cases(total_number: int, shard_sizes: list[int]) -> int:
         return sum(
             comb(k, k + last_shard - total_number)
             * comb(total_number, k)
-            * collude_cases(k, shard_sizes[:-1])
+            * collude_cases(k, rest_shard)
             for k in np.arange(
                 start=max(rest_shard[-1], total_number - last_shard),
                 stop=min(sum(rest_shard), total_number) + 1,
