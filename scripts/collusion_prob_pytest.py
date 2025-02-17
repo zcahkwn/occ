@@ -1,13 +1,13 @@
 import pytest
-from scripts.collusion_prob import collusion_m
 from occenv.simulate import simulate_repeat
+from occenv.analytical import Collusion
 
 def test_collusion_formula():
     total_number = 10
-    shard_sizes = [4, 4, 2, 3]
+    shard_sizes = [6, 5, 3, 9]
     
-    # result from collusion_prob.py
-    theoretical = collusion_m(total_number, shard_sizes)
+    # result from analytical.py
+    theoretical = Collusion(total_number, shard_sizes)
     
     # simulation result
     repeat = int(1e7) 
