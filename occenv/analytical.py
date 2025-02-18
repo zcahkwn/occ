@@ -28,15 +28,13 @@ class Collusion:
         """
         Calculate the probability of colluding to reconstruct the secret set.
         """
-        assert (
-            sum(self.shard_sizes) >= self.total_number
-        ), "Sum of shard sizes must be greater than total number."
-
+        if sum(self.shard_sizes) < self.total_number:
+            return 0
         return self.collude_cases(self.total_number, self.shard_sizes) / prod(
             comb(self.total_number, n) for n in self.shard_sizes
         )
 
 
 if __name__ == "__main__":
-    parties_list = Collusion(10, [3, 4, 3, 5])
+    parties_list = Collusion(10, [2,3,5])
     probability = parties_list.collude_prob()
