@@ -1,7 +1,7 @@
 import itertools
 import pytest
 from occenv.overlap_simulate import OverlapSimulate
-from occenv.analytical import Analytical_result
+from occenv.analytical import AnalyticalResult
 
 
 @pytest.mark.parametrize(
@@ -13,7 +13,7 @@ def test_overlap_simulation(shard_sizes):
     shard_sizes = list(shard_sizes)
 
     simulation = OverlapSimulate(total_number, shard_sizes)
-    analytical = Analytical_result(total_number, shard_sizes)
+    analytical = AnalyticalResult(total_number, shard_sizes)
 
     repeat = int(1e5)
     simulation_results = simulation.simulate_repeat(repeat)

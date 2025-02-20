@@ -4,41 +4,44 @@ import numpy as np
 import itertools
 
 
-class Analytical_result:
+class AnalyticalResult:
     def __init__(self, total_number: int, shard_sizes: list[int]):
         self.total_number = total_number
         self.shard_sizes = shard_sizes
         self.party_number = len(shard_sizes)
 
-    def collude_cases(self, total_number: int, shard_sizes: list[int]) -> int:
+    def collude_cases(self, number_covered) -> int:
         """
         Calculate the number of cases of colluding to reconstruct the secret set.
         """
 
-        last_shard = shard_sizes[-1]
-        rest_shard = shard_sizes[:-1]
-        return sum(
-            comb(k, k + last_shard - total_number)
-            * comb(total_number, k)
-            * (self.collude_cases(k, rest_shard) if rest_shard else 1)
-            for k in np.arange(
-                start=max(rest_shard + [total_number - last_shard]),
-                stop=min(sum(rest_shard), total_number) + 1,
-                step=1,
+        if sum(self.shard_sizes) < number_covered:
+            return 0
+
+        def collude_cases_recursive(total_number: int, shard_sizes: list[int]) -> int:
+
+            last_shard = shard_sizes[-1]
+            rest_shard = shard_sizes[:-1]
+            return sum(
+                comb(k, k + last_shard - total_number)
+                * comb(total_number, k)
+                * (collude_cases_recursive(k, rest_shard) if rest_shard else 1)
+                for k in np.arange(
+                    start=max(rest_shard + [total_number - last_shard]),
+                    stop=min(sum(rest_shard), total_number) + 1,
+                    step=1,
+                )
             )
-        )
+
+        return collude_cases_recursive(self.total_number, self.shard_sizes)
 
     def collude_prob(self, number_covered: int) -> float:
         """
         Calculate the probability of colluding to reconstruct the secret set.
         """
-        assert (
-            self.total_number >= number_covered
-        ), "The number of covered elements should be less than or equal to the total number of elements."
-
         return (
-            comb(self.total_number, number_covered)
-            * self.collude_cases(number_covered, self.shard_sizes)
+            self.collude_cases(number_covered)
+            * comb(self.total_number, number_covered)
             / prod(comb(self.total_number, n) for n in self.shard_sizes)
         )
 
@@ -71,7 +74,7 @@ class Analytical_result:
 
 
 if __name__ == "__main__":
-    compute = Analytical_result(10, [5, 6, 9])
+    compute = AnalyticalResult(10, [5, 6, 9])
     collution_probability = compute.collude_prob(10)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()

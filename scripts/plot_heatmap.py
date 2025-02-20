@@ -1,5 +1,5 @@
 from occenv.constants import FIGURE_DIR
-from occenv.analytical import Analytical_result
+from occenv.analytical import AnalyticalResult
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -24,7 +24,7 @@ def plot_collude_2():
     x, y = create_meshgrid()
     z = np.vectorize(
         lambda n1, n2: (
-            Analytical_result(N, [n1, n2]).collude_prob(N) if n1 + n2 >= N else np.nan
+            AnalyticalResult(N, [n1, n2]).collude_prob(N) if n1 + n2 >= N else np.nan
         )
     )(x, y)
     create_heatmap(
@@ -43,9 +43,7 @@ def plot_collude_2():
 
 def plot_sigma_2():
     x, y = create_meshgrid()
-    z = np.vectorize(lambda n1, n2: Analytical_result(N, [n1, n2]).compute_sigma())(
-        x, y
-    )
+    z = np.vectorize(lambda n1, n2: AnalyticalResult(N, [n1, n2]).compute_sigma())(x, y)
     # z = (N*(x+y)-x*y)/(N**2)
     create_heatmap(
         x,
@@ -63,7 +61,7 @@ def plot_sigma_2():
 
 def plot_occ_2():
     x, y = create_meshgrid()
-    z = np.vectorize(lambda n1, n2: Analytical_result(N, [n1, n2]).occ_value())(x, y)
+    z = np.vectorize(lambda n1, n2: AnalyticalResult(N, [n1, n2]).occ_value())(x, y)
     create_heatmap(
         x,
         y,
@@ -81,8 +79,8 @@ def plot_occ_2():
 def plot_occ_relation_2():
     x, y = create_meshgrid()
     z = np.vectorize(
-        lambda n1, n2: Analytical_result(N, [n1, n2]).collude_prob(N)
-        / Analytical_result(N, [n1, n2]).occ_value()
+        lambda n1, n2: AnalyticalResult(N, [n1, n2]).collude_prob(N)
+        / AnalyticalResult(N, [n1, n2]).occ_value()
     )(x, y)
     create_heatmap(
         x,
@@ -101,8 +99,8 @@ def plot_occ_relation_2():
 def plot_sigma_relation_2():
     x, y = create_meshgrid()
     z = np.vectorize(
-        lambda n1, n2: Analytical_result(N, [n1, n2]).collude_prob(N)
-        / Analytical_result(N, [n1, n2]).compute_sigma()
+        lambda n1, n2: AnalyticalResult(N, [n1, n2]).collude_prob(N)
+        / AnalyticalResult(N, [n1, n2]).compute_sigma()
     )(x, y)
     create_heatmap(
         x,
