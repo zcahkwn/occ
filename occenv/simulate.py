@@ -5,17 +5,16 @@ from occenv.env import DataShare
 
 def simulate_once(
     total_number: int, shard_sizes: list[int]
-    
-) -> float:
+) -> int:
     new_mpc = DataShare(total_number)
     elements_covered = []
     for shard_size in shard_sizes:
         elements_covered.extend(new_mpc.create_shard(shard_size))
     
-    return len(set(elements_covered)) / len(set(new_mpc.secret_set))
+    return len(set(elements_covered)) 
 
 
-def simulate_repeat(repeat: int, **kwargs) -> list[float]:
+def simulate_repeat(repeat: int, **kwargs) -> list[int]:
     """
     Simulate repeat times and return the results using Joblib for parallel processing.
     """
@@ -28,4 +27,4 @@ if __name__ == "__main__":
     n = int(5e7)
     # Example usage
     results = simulate_repeat(repeat=n, total_number=10, shard_sizes=[7, 5, 3])
-    print(sum(results) / n)
+    # print(sum(results) / n)
