@@ -1,71 +1,38 @@
-from math import comb, prod, floor
-import numpy as np
 import matplotlib.pyplot as plt
-from occenv.constants import FIGURE_DIR 
+import numpy as np
+from occenv.constants import FIGURE_DIR
+from occenv.analytical import Analytical_result
 
-class Collusion: 
-    def __init__(self, total_number: int, shard_sizes: list[int], percentage: float):
-        self.total_number = total_number
-        self.shard_sizes = shard_sizes
-        self.percentage = percentage
-        self.number_coverage = floor(total_number * self.percentage)
+N = 10
+shard_sizes = [5, 6, 4]
+numbers_covered = np.arange(1, N + 1, 1)
+probabilities = []
 
-    def collude_cases(self, total_number: int, shard_sizes: list[int]) -> int:
-        """
-        Calculate the number of cases of colluding to reconstruct the secret set.
-        """
+for number_covered in numbers_covered:
+    parties_list = Analytical_result(N, shard_sizes)
+    probability = parties_list.collude_prob(number_covered)
+    probabilities.append(probability)
 
-        last_shard = shard_sizes[-1]
-        rest_shard = shard_sizes[:-1]
-        return sum(
-            comb(k, k + last_shard - total_number)
-            * comb(total_number, k)
-            * (self.collude_cases(k, rest_shard) if rest_shard else 1)
-            for k in np.arange(
-                start=max(rest_shard + [total_number - last_shard]),
-                stop=min(sum(rest_shard), total_number) + 1,
-                step=1,
-            )
-        )
+plt.plot(numbers_covered, probabilities, marker="o", linestyle="-")
+plt.xlabel("Total numbers covered")
+plt.ylabel("Probability")
+plt.title(f"Collusion Probability for N={N},$S_{len(shard_sizes)}$={shard_sizes}")
+plt.grid(True)
 
-    def collude_prob(self) -> float:
-        """
-        Calculate the probability of colluding to reconstruct the secret set.
-        """
-
-        if sum(self.shard_sizes) < self.number_coverage or any(shard > self.number_coverage for shard in self.shard_sizes):
-            return 0
-        
-        numerator = comb(self.total_number, self.number_coverage) * self.collude_cases(self.number_coverage, self.shard_sizes)
-        denominator = prod(comb(self.total_number, n) for n in self.shard_sizes)
-        return numerator / denominator
-
-if __name__ == "__main__":
-    percentages = np.arange(0.1, 1.1, 0.1)
-    probabilities = []
-
-    for percentage in percentages:
-        parties_list = Collusion(10, [4,7], percentage)
-        probability = parties_list.collude_prob()
-        probabilities.append(probability)
-
-    plt.plot(percentages, probabilities, marker='o', linestyle='-')
-    plt.xlabel("Percentage")
-    plt.ylabel("Probability")
-    plt.title("Collusion Probability vs Percentage")
-    plt.grid(True)
-
-    plt.savefig(FIGURE_DIR/"collusion_probability_4_7.pdf")
-    plt.show()
+plt.savefig(FIGURE_DIR / f"collusion_probability_{shard_sizes}.pdf")
+plt.show()
 
 
-    cumulative_probabilities = cumulative_probabilities = np.cumsum(probabilities[::-1])[::-1]
-    plt.plot(percentages, cumulative_probabilities, marker='o', linestyle='-')
-    plt.xlabel("Percentage")
-    plt.ylabel("Cumulative Probability")
-    plt.title("Cumulative Collusion Probability vs Percentage")
-    plt.grid(True)
+cumulative_probabilities = cumulative_probabilities = np.cumsum(probabilities[::-1])[
+    ::-1
+]
+plt.plot(numbers_covered, cumulative_probabilities, marker="o", linestyle="-")
+plt.xlabel("Total numbers covered")
+plt.ylabel("Cumulative Probability")
+plt.title(
+    f"Cumulative Collusion Probability for N={N},$S_{len(shard_sizes)}$={shard_sizes}"
+)
+plt.grid(True)
 
-    plt.savefig(FIGURE_DIR/"cumulative_collusion_probability_4_7.pdf")
-    plt.show()
-
+plt.savefig(FIGURE_DIR / f"cumulative_collusion_probability_{shard_sizes}.pdf")
+plt.show()
