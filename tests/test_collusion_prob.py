@@ -26,9 +26,6 @@ def test_collusion_formula(shard_sizes):
         total_number=total_number, 
         shard_sizes=shard_sizes
         )
-    simulation_probability = sum(simulation_results) / repeat
+    simulation_probability = sum([w == 1 for w in simulation_results]) / repeat
     
     assert theoretical == pytest.approx(simulation_probability, abs=0.01)
-
-if __name__ == "__main__":
-    pytest.main([__file__])
