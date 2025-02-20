@@ -36,5 +36,7 @@ class Collusion:
 
 
 if __name__ == "__main__":
-    parties_list = Collusion(10, [2,3,5])
+    parties_list = Collusion(10, [5,6,9])
     probability = parties_list.collude_prob()
+    print(probability)
+    
