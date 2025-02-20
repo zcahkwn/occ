@@ -33,16 +33,16 @@ class AnalyticalResult:
                 )
             )
 
-        return collude_cases_recursive(self.total_number, self.shard_sizes)
+        return comb(self.total_number, number_covered) * collude_cases_recursive(
+            self.total_number, self.shard_sizes
+        )
 
     def collude_prob(self, number_covered: int) -> float:
         """
         Calculate the probability of colluding to reconstruct the secret set.
         """
-        return (
-            self.collude_cases(number_covered)
-            * comb(self.total_number, number_covered)
-            / prod(comb(self.total_number, n) for n in self.shard_sizes)
+        return self.collude_cases(number_covered) / prod(
+            comb(self.total_number, n) for n in self.shard_sizes
         )
 
     def rho(self, indices: Iterable[int]) -> float:
