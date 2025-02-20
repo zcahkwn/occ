@@ -1,5 +1,5 @@
 import pytest
-from occenv.simulate import simulate_repeat
+from occenv.collusion_simulate import simulate_repeat
 from occenv.analytical import Analytical_result
 
 @pytest.mark.parametrize("shard_sizes", [       

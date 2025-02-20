@@ -1,4 +1,5 @@
 from math import comb, prod
+from typing import Iterable
 import numpy as np
 import itertools
 
@@ -36,7 +37,7 @@ class Analytical_result:
             comb(self.total_number, n) for n in self.shard_sizes
         )
 
-    def rho(self, indices):
+    def rho(self, indices: Iterable[int]) -> float:
         product = 1
         for i in indices:
             product *= self.shard_sizes[i]
