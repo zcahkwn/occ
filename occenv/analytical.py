@@ -46,9 +46,7 @@ class AnalyticalResult:
         )
 
     def rho(self, indices: Iterable[int]) -> float:
-        product = 1
-        for i in indices:
-            product *= self.shard_sizes[i]
+        product = prod(self.shard_sizes[i] for i in indices)
         k = len(indices)
         result = product / (self.total_number**k)
         print(
