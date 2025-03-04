@@ -23,9 +23,19 @@ plt.savefig(FIGURE_DIR / f"collusion_probability_{shard_sizes}.pdf")
 plt.show()
 
 
-cumulative_probabilities = cumulative_probabilities = np.cumsum(probabilities[::-1])[
-    ::-1
-]
+reverse_cumulative_probabilities = np.cumsum(probabilities[::-1])[::-1]
+plt.plot(numbers_covered, reverse_cumulative_probabilities, marker="o", linestyle="-")
+plt.xlabel("Total numbers covered")
+plt.ylabel("Cumulative Probability")
+plt.title(
+    f"Reverse Cumulative Collusion Probability for N={N},$S_{len(shard_sizes)}$={shard_sizes}"
+)
+plt.grid(True)
+
+plt.savefig(FIGURE_DIR / f"reverse_cumulative_collusion_probability_{shard_sizes}.pdf")
+plt.show()
+
+cumulative_probabilities = np.cumsum(probabilities)
 plt.plot(numbers_covered, cumulative_probabilities, marker="o", linestyle="-")
 plt.xlabel("Total numbers covered")
 plt.ylabel("Cumulative Probability")

@@ -18,23 +18,23 @@ class AnalyticalResult:
         if sum(self.shard_sizes) < number_covered:
             return 0
 
-        def collude_cases_recursive(total_number: int, shard_sizes: list[int]) -> int:
+        def collude_cases_recursive(number_covered: int, shard_sizes: list[int]) -> int:
 
             last_shard = shard_sizes[-1]
             rest_shard = shard_sizes[:-1]
             return sum(
-                comb(k, k + last_shard - total_number)
-                * comb(total_number, k)
+                comb(k, k + last_shard - number_covered)
+                * comb(number_covered, k)
                 * (collude_cases_recursive(k, rest_shard) if rest_shard else 1)
                 for k in np.arange(
-                    start=max(rest_shard + [total_number - last_shard]),
-                    stop=min(sum(rest_shard), total_number) + 1,
+                    start=max(rest_shard + [number_covered - last_shard]),
+                    stop=min(sum(rest_shard), number_covered) + 1,
                     step=1,
                 )
             )
 
         return comb(self.total_number, number_covered) * collude_cases_recursive(
-            self.total_number, self.shard_sizes
+            number_covered, self.shard_sizes
         )
 
     def collude_prob(self, number_covered: int) -> float:
@@ -72,8 +72,8 @@ class AnalyticalResult:
 
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(10, [5, 6, 9])
-    collution_probability = compute.collude_prob(10)
+    compute = AnalyticalResult(10, [5, 6, 4])
+    collution_probability = compute.collude_prob(8)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
