@@ -1,31 +1,21 @@
 import pytest
-from occenv.simulate import simulate_repeat
-from occenv.analytical import Collusion
+from occenv.simulate import Simulate
+from occenv.analytical import AnalyticalResult
 
-@pytest.mark.parametrize("shard_sizes", [       
-    [7],
-    [10],             
-    [6, 3], 
-    [5, 6],
-    [10, 6],                   
-    [3, 2, 4],
-    [7, 6, 9],
-    [3, 5, 7, 3]      
-])
 
+@pytest.mark.parametrize(
+    "shard_sizes",
+    [[7], [10], [6, 3], [5, 6], [10, 6], [3, 2, 4], [7, 6, 9], [3, 5, 7, 3]],
+)
 def test_collusion_formula(shard_sizes):
     total_number = 10
-    
-    # result from analytical.py
-    theoretical = Collusion(total_number, shard_sizes).collude_prob()
-    
-    # simulation result
-    repeat = int(1e6) 
-    simulation_results = simulate_repeat(
-        repeat=repeat, 
-        total_number=total_number, 
-        shard_sizes=shard_sizes
-        )
-    simulation_probability = sum([w == total_number for w in simulation_results]) / repeat
-    
+    theoretical = AnalyticalResult(total_number, shard_sizes).collude_prob(total_number)
+    simulation = Simulate(total_number, shard_sizes)
+
+    repeat = int(1e6)
+    simulation_results = simulation.simulate_collusion_repeat(repeat=repeat)
+    simulation_probability = (
+        sum([w == total_number for w in simulation_results]) / repeat
+    )
+
     assert theoretical == pytest.approx(simulation_probability, abs=0.01)
