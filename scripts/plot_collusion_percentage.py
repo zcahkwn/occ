@@ -6,14 +6,11 @@ from occenv.analytical import AnalyticalResult
 from occenv.constants import FIGURE_DIR
 
 N = 100
-shard_sizes = [70, 60]
+shard_sizes = [70, 60, 10, 20, 30]
 numbers_covered = np.arange(1, N + 1, 1)
-probabilities = []
 
-for number_covered in numbers_covered:
-    parties_list = AnalyticalResult(N, shard_sizes)
-    probability = parties_list.collude_prob(number_covered)
-    probabilities.append(probability)
+parties_list = AnalyticalResult(N, shard_sizes)
+probabilities = [parties_list.collude_prob(number_covered) for number_covered in numbers_covered]
 
 plt.plot(numbers_covered, probabilities, marker="o", linestyle="-")
 plt.xlabel("Total numbers covered")
@@ -25,14 +22,14 @@ plt.grid(True)
 plt.show()
 
 
-mu = np.sum([i * probabilities[i - 1] for i in range(1, N + 1)])
-sigma = np.sqrt(np.sum([(i - mu) ** 2 * probabilities[i - 1] for i in range(1, N + 1)]))
+mu = np.sum([i * probabilities[i - 1] for i in numbers_covered])
+sigma = np.sqrt(np.sum([(i - mu) ** 2 * probabilities[i - 1] for i in numbers_covered]))
 print(f"Mean (μ): {mu}")
 print(f"Standard Deviation (σ): {sigma}")
 plt.bar(numbers_covered, probabilities, alpha=0.6, label="Discrete PDF")
 
 # Plot the normal approximation
-x_continuous = np.linspace(min(numbers_covered) - 1, max(numbers_covered) + 1, 100)
+x_continuous = np.linspace(0, N + 1, 1000)
 normal_pdf = stats.norm.pdf(x_continuous, mu, sigma)
 plt.plot(x_continuous, normal_pdf, "r-", label="Normal Approximation")
 
