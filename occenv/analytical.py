@@ -10,22 +10,22 @@ class AnalyticalResult:
         self.shard_sizes = shard_sizes
         self.party_number = len(shard_sizes)
 
-    def collude_cases(self, number_covered) -> int:
+    def union_cases(self, number_covered) -> int:
         """
-        Calculate the number of cases of colluding to reconstruct the secret set.
+        Calculate the number of cases when the union of the shards have size number_covered.
         """
 
         if sum(self.shard_sizes) < number_covered:
             return 0
 
-        def collude_cases_recursive(number_covered: int, shard_sizes: list[int]) -> int:
+        def union_cases_recursive(number_covered: int, shard_sizes: list[int]) -> int:
 
             last_shard = shard_sizes[-1]
             rest_shard = shard_sizes[:-1]
             return sum(
                 comb(k, k + last_shard - number_covered)
                 * comb(number_covered, k)
-                * (collude_cases_recursive(k, rest_shard) if rest_shard else 1)
+                * (union_cases_recursive(k, rest_shard) if rest_shard else 1)
                 for k in np.arange(
                     start=max(rest_shard + [number_covered - last_shard]),
                     stop=min(sum(rest_shard), number_covered) + 1,
@@ -33,15 +33,67 @@ class AnalyticalResult:
                 )
             )
 
-        return comb(self.total_number, number_covered) * collude_cases_recursive(
+        return comb(self.total_number, number_covered) * union_cases_recursive(
             number_covered, self.shard_sizes
         )
 
-    def collude_prob(self, number_covered: int) -> float:
+    def union_prob(self, number_covered: int) -> float:
         """
         Calculate the probability of colluding to reconstruct the secret set.
         """
-        return self.collude_cases(number_covered) / prod(
+        return self.union_cases(number_covered) / prod(
+            comb(self.total_number, n) for n in self.shard_sizes
+        )
+
+    def intersect_cases(self, overall_intersect: int) -> float:
+        """
+        Calculate the number of cases when the intersection of the shards have size number_covered.
+        """
+        # min_shard = min(self.shard_sizes)
+        # max_lower = max(
+        #     0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number
+        # )
+        # if overall_intersect > min_shard or overall_intersect < max_lower:
+        #     return 0
+
+        def intersect_cases_recursive(
+            number_intersect: int, remaining_shards: list[int]
+        ) -> int:
+            if not remaining_shards:
+                # base case: intersection of zero parties is N (the universe)
+                return 1 if number_intersect == self.total_number else 0
+
+            last_shard = remaining_shards[-1]
+            rest_shard = remaining_shards[:-1]
+            return sum(
+                comb(k, number_intersect)
+                * comb(self.total_number - k, last_shard - number_intersect)
+                * (intersect_cases_recursive(k, rest_shard))
+                for k in np.arange(
+                    start=max(
+                        number_intersect,
+                        sum(rest_shard)
+                        - self.total_number * (len(remaining_shards) - 2),
+                    ),
+                    stop=min(rest_shard) + 1 if rest_shard else self.total_number + 1,
+                    step=1,
+                )
+            )
+
+        return intersect_cases_recursive(overall_intersect, self.shard_sizes)
+
+    def intersect_prob(self, overall_intersect: int) -> float:
+        """
+        Calculate the probability that the intersection of the shards have size overall_intersect.
+        """
+        lower = max(
+            0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number
+        )
+        upper = min(self.shard_sizes)
+        if not (lower <= overall_intersect <= upper):
+            return 0.0
+
+        return self.intersect_cases(overall_intersect) / prod(
             comb(self.total_number, n) for n in self.shard_sizes
         )
 
@@ -72,11 +124,16 @@ class AnalyticalResult:
 
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(10, [5, 6, 4])
-    collution_probability = compute.collude_prob(8)
+    compute = AnalyticalResult(100, [70 , 60, 50])
+    union_size = 94
+    union_pmf = compute.union_prob(union_size)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
+    intersect_size = 21
+    intersect_pmf = compute.intersect_prob(intersect_size)
+
     print("sigma =", sigma_value)
     print("occ =", occ_value)
-    print("probability of collusion =", collution_probability)
+    print(f"probability that union size is {union_size} =", union_pmf)
+    print(f"probability that intersect size is {intersect_size} =", intersect_pmf)

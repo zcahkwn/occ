@@ -17,5 +17,6 @@
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
-    }
+    },
+    "jupyter.interactiveWindow.textEditor.executeSelection": true
 }

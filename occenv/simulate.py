@@ -43,7 +43,7 @@ class Simulate:
         }
         return averages
 
-    def simulate_collusion_once(self) -> int:
+    def simulate_union_once(self) -> int:
         new_mpc = DataShare(self.total_number)
         elements_covered = []
         for shard_size in self.shard_sizes:
@@ -51,24 +51,43 @@ class Simulate:
 
         return len(set(elements_covered))
 
-    def simulate_collusion_repeat(self, repeat: int, **kwargs) -> list[int]:
+    def simulate_union_repeat(self, repeat: int, **kwargs) -> list[int]:
         """
         Simulate repeat times and return the results using Joblib for parallel processing.
         """
         return Parallel(n_jobs=-1)(
-            delayed(self.simulate_collusion_once)(**kwargs) for _ in range(repeat)
+            delayed(self.simulate_union_once)(**kwargs) for _ in range(repeat)
+        )
+
+    def simulate_intersection_once(self) -> int:
+        new_mpc = DataShare(self.total_number)
+        shards = [new_mpc.create_shard(shard_size) for shard_size in self.shard_sizes]
+        intersection = set(shards[0])
+        for shard in shards[1:]:
+            intersection &= set(shard)
+        return len(intersection)
+
+    def simulate_intersection_repeat(self, repeat: int, **kwargs) -> list[int]:
+        """
+        Simulate repeat times and return the results using Joblib for parallel processing.
+        """
+        return Parallel(n_jobs=-1)(
+            delayed(self.simulate_intersection_once)(**kwargs) for _ in range(repeat)
         )
 
 
 if __name__ == "__main__":
     total_number = 10
-    shard_sizes = [5, 6, 9]
+    shard_sizes = [5, 6, 4]
     simulator = Simulate(total_number, shard_sizes)
 
     repeat = int(1e5)
-    collusion = simulator.simulate_collusion_repeat(repeat)
-    print(sum(collusion) / repeat)
+    union = simulator.simulate_union_repeat(repeat)
+    print("The average union is ", sum(union) / repeat)
     overlap_number = simulator.simulate_overlap_repeat(repeat)
+
+    intersection = simulator.simulate_intersection_repeat(repeat)
+    print("The average intersection is ", sum(intersection) / repeat)
 
     for combo, avg in sorted(overlap_number.items()):
         print(f"Combination {combo}: Average intersection = {avg}")
