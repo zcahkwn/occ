@@ -47,14 +47,14 @@ class AnalyticalResult:
 
     def intersect_cases(self, overall_intersect: int) -> float:
         """
-        Calculate the number of cases when the intersection of the shards have size number_covered.
+        Calculate the number of cases when the intersection of the shards have size intersect.
         """
-        # min_shard = min(self.shard_sizes)
-        # max_lower = max(
-        #     0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number
-        # )
-        # if overall_intersect > min_shard or overall_intersect < max_lower:
-        #     return 0
+        if not (
+            max(0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number)
+            <= overall_intersect
+            <= min(self.shard_sizes)
+        ):
+            return 0.0
 
         def intersect_cases_recursive(
             number_intersect: int, remaining_shards: list[int]
@@ -86,13 +86,6 @@ class AnalyticalResult:
         """
         Calculate the probability that the intersection of the shards have size overall_intersect.
         """
-        lower = max(
-            0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number
-        )
-        upper = min(self.shard_sizes)
-        if not (lower <= overall_intersect <= upper):
-            return 0.0
-
         return self.intersect_cases(overall_intersect) / prod(
             comb(self.total_number, n) for n in self.shard_sizes
         )
@@ -124,13 +117,13 @@ class AnalyticalResult:
 
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(100, [70 , 60, 50])
+    compute = AnalyticalResult(100, [70, 70, 70])
     union_size = 94
     union_pmf = compute.union_prob(union_size)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
-    intersect_size = 21
+    intersect_size = 10
     intersect_pmf = compute.intersect_prob(intersect_size)
 
     print("sigma =", sigma_value)
