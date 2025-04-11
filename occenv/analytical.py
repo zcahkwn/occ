@@ -1,4 +1,4 @@
-from math import comb, prod
+from math import comb, prod, lgamma, log, exp
 from typing import Iterable
 import numpy as np
 import itertools
@@ -115,18 +115,54 @@ class AnalyticalResult:
     def occ_value(self):
         return self.rho(list(range(self.party_number)))
 
+    def expected_jaccard(self):
+        """
+        Compute the expected Jaccard index for two sets of sizes n1 and n2
+        using log-space math to avoid overflow.
+        """
+        n1, n2 = self.shard_sizes
+        expected_jaccard_index = 0
+
+        for i in range(max(0, n1 + n2 - self.total_number), min(n1, n2) + 1):
+            expected_jaccard_index += (
+                i
+                / (n1 + n2 - i)
+                * comb(n1, i)
+                * comb(self.total_number - n1, n2 - i)
+                / comb(self.total_number, n2)
+            )
+        return expected_jaccard_index
+
+    def estimated_jaccard(self):
+        """
+        Estimate Jaccard index using a simplified formula.
+        """
+        n1, n2 = self.shard_sizes
+        return n1 * n2 / (self.total_number * (n1 + n2) - n1 * n2)
+
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(100, [70, 70, 70])
+    compute = AnalyticalResult(100, [1, 1])
     union_size = 94
     union_pmf = compute.union_prob(union_size)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
-    intersect_size = 10
+    intersect_size = 34
     intersect_pmf = compute.intersect_prob(intersect_size)
 
     print("sigma =", sigma_value)
     print("occ =", occ_value)
     print(f"probability that union size is {union_size} =", union_pmf)
     print(f"probability that intersect size is {intersect_size} =", intersect_pmf)
+
+    # Calculate Jaccard index for two parties
+    if compute.party_number == 2:
+        expected_jaccard = compute.expected_jaccard()
+        estimated_jaccard = compute.estimated_jaccard()
+
+        print(f"Expected Jaccard index: {expected_jaccard}")
+        print(f"Estimated Jaccard index: {estimated_jaccard}")
+        print(
+            f"Percentage difference: {(expected_jaccard - estimated_jaccard)*100/expected_jaccard}%"
+        )
