@@ -3,6 +3,8 @@ from occenv.analytical import AnalyticalResult
 import numpy as np
 import matplotlib.pyplot as plt
 
+N = 10
+
 
 def create_meshgrid(start=1):
     n_vals = np.arange(start, N)
@@ -180,10 +182,10 @@ def plot_jaccard_difference():
 
 
 if __name__ == "__main__":
-    N = 5
-    # plot_collude_2()
-    # plot_sigma_2()
-    # plot_occ_2()
+    N = 10
+    plot_collude_2()
+    plot_sigma_2()
+    plot_occ_2()
     # plot_occ_relation_2()
     # plot_sigma_relation_2()
     plot_expected_jaccard()

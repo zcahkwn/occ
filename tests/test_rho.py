@@ -16,7 +16,7 @@ def test_overlap_simulation(shard_sizes):
     analytical = AnalyticalResult(total_number, shard_sizes)
 
     repeat = int(1e5)
-    simulation_results = simulation.simulate_overlap_repeat(repeat)
+    simulation_results = simulation.simulate_combo_repeat(repeat)
 
     m = len(shard_sizes)
     # For each combination of shards, compare simulated value with analytical value.

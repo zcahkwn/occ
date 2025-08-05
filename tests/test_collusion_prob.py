@@ -9,11 +9,11 @@ from occenv.analytical import AnalyticalResult
 )
 def test_collusion_formula(shard_sizes):
     total_number = 10
-    theoretical = AnalyticalResult(total_number, shard_sizes).collude_prob(total_number)
+    theoretical = AnalyticalResult(total_number, shard_sizes).union_prob(total_number)
     simulation = Simulate(total_number, shard_sizes)
 
     repeat = int(1e6)
-    simulation_results = simulation.simulate_collusion_repeat(repeat=repeat)
+    simulation_results = simulation.simulate_union_repeat(repeat=repeat)
     simulation_probability = (
         sum([w == total_number for w in simulation_results]) / repeat
     )

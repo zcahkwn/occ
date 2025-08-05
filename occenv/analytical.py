@@ -1,4 +1,4 @@
-from math import comb, prod, lgamma, log, exp
+from math import comb, prod
 from typing import Iterable
 import numpy as np
 import itertools
@@ -90,6 +90,11 @@ class AnalyticalResult:
             comb(self.total_number, n) for n in self.shard_sizes
         )
 
+    # def jaccard(self, indices: Iterable[int]) -> float:
+
+    # def jaccard_prob(self, indices: Iterable[int]) -> float:
+    #     return self.jaccard(indices) * self.union_prob(sum(self.shard_sizes[i] for i in indices))
+
     def rho(self, indices: Iterable[int]) -> float:
         product = prod(self.shard_sizes[i] for i in indices)
         k = len(indices)
@@ -112,7 +117,7 @@ class AnalyticalResult:
             sigma += ((-1) ** (k + 1)) * sum_k
         return sigma
 
-    def occ_value(self):
+    def occ_value(self):  # N * OCC value is the expected total intersection
         return self.rho(list(range(self.party_number)))
 
     def expected_jaccard(self):
@@ -142,17 +147,19 @@ class AnalyticalResult:
 
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(100, [1, 1])
-    union_size = 94
+    compute = AnalyticalResult(1000, [500, 600])
+    collusion_probability = compute.union_prob(100)
+    union_size = 940
     union_pmf = compute.union_prob(union_size)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
-    intersect_size = 34
+    intersect_size = 340
     intersect_pmf = compute.intersect_prob(intersect_size)
 
     print("sigma =", sigma_value)
-    print("occ =", occ_value)
+    print("expected total intersection =", occ_value)
+    print("probability of collusion =", collusion_probability)
     print(f"probability that union size is {union_size} =", union_pmf)
     print(f"probability that intersect size is {intersect_size} =", intersect_pmf)
 

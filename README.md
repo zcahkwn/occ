@@ -58,3 +58,12 @@ pip install toml
 ```bash
 pip install -e ".[dev]"
 ```
+
+---
+
+## Run Analysis
+
+plot 
+```
+python scripts/plot_collusion_percentage.py
+```
