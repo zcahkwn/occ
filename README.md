@@ -65,5 +65,5 @@ pip install -e ".[dev]"
 
 plot 
 ```
-python scripts/plot_collusion_percentage.py
+python scripts/plot_pmf.py
 ```
