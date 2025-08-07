@@ -20,9 +20,9 @@ from occenv.analytical import AnalyticalResult
 from occenv.approximated import ApproximatedResult
 from occenv.constants import FIGURE_DIR
 
-N = 50
+N = 200
 
-shard_sizes = [25, 36, 24]
+shard_sizes = [150, 140, 160]
 m = len(shard_sizes)
 alpha = [n / N for n in shard_sizes]
 

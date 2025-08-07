@@ -1,5 +1,6 @@
-from math import comb, prod
+from math import comb, prod, ceil, gcd
 from typing import Iterable
+from functools import lru_cache
 import numpy as np
 import itertools
 
@@ -18,10 +19,10 @@ class AnalyticalResult:
         if sum(self.shard_sizes) < number_covered:
             return 0
 
-        def union_cases_recursive(number_covered: int, shard_sizes: list[int]) -> int:
+        def union_cases_recursive(number_covered: int, shard_sizes_m: list[int]) -> int:
 
-            last_shard = shard_sizes[-1]
-            rest_shard = shard_sizes[:-1]
+            last_shard = shard_sizes_m[-1]
+            rest_shard = shard_sizes_m[:-1]
             return sum(
                 comb(k, k + last_shard - number_covered)
                 * comb(number_covered, k)
@@ -57,14 +58,14 @@ class AnalyticalResult:
             return 0.0
 
         def intersect_cases_recursive(
-            number_intersect: int, remaining_shards: list[int]
+            number_intersect: int, shard_sizes_m: list[int]
         ) -> int:
-            if not remaining_shards:
+            if not shard_sizes_m:
                 # base case: intersection of zero parties is N (the universe)
                 return 1 if number_intersect == self.total_number else 0
 
-            last_shard = remaining_shards[-1]
-            rest_shard = remaining_shards[:-1]
+            last_shard = shard_sizes_m[-1]
+            rest_shard = shard_sizes_m[:-1]
             return sum(
                 comb(k, number_intersect)
                 * comb(self.total_number - k, last_shard - number_intersect)
@@ -72,8 +73,7 @@ class AnalyticalResult:
                 for k in np.arange(
                     start=max(
                         number_intersect,
-                        sum(rest_shard)
-                        - self.total_number * (len(remaining_shards) - 2),
+                        sum(rest_shard) - self.total_number * (len(shard_sizes_m) - 2),
                     ),
                     stop=min(rest_shard) + 1 if rest_shard else self.total_number + 1,
                     step=1,
@@ -90,7 +90,107 @@ class AnalyticalResult:
             comb(self.total_number, n) for n in self.shard_sizes
         )
 
-    # def jaccard(self, indices: Iterable[int]) -> float:
+    def bivariate_cases(self, number_covered: int, number_intersect: int) -> int:
+        """
+        Exact count of ordered m-tuples with |⋃P_i|=u and |⋂P_i|=v.
+        """
+        # m=1 case
+        if len(self.shard_sizes) == 1:
+            n = self.shard_sizes[0]
+            return (
+                comb(self.total_number, n)
+                if (number_covered == n and number_intersect == n)
+                else 0
+            )
+
+        if not (0 <= number_intersect <= min(self.shard_sizes)):
+            return 0
+
+        if number_covered < number_intersect:
+            return 0
+        u_lower = max(
+            max(self.shard_sizes),
+            ceil(
+                (sum(self.shard_sizes) - number_intersect) / (len(self.shard_sizes) - 1)
+            ),
+        )
+        u_upper = min(
+            self.total_number,
+            sum(self.shard_sizes) - (len(self.shard_sizes) - 1) * number_intersect,
+        )
+        if not (u_lower <= number_covered <= u_upper):
+            return 0
+
+        @lru_cache(None)
+        def bivariate_cases_recursive(
+            u_m: int, v_m: int, shard_sizes_m: tuple[int, ...]
+        ) -> int:
+            m = len(shard_sizes_m)
+            last_shard = shard_sizes_m[-1]
+            rest_shard = shard_sizes_m[:-1]
+            if m == 1:
+                return (
+                    comb(self.total_number, last_shard)
+                    if (u_m == last_shard and v_m == last_shard)
+                    else 0
+                )
+
+            v_min = max(v_m, sum(rest_shard) - (m - 2) * self.total_number, 0)
+            v_max = min(rest_shard)
+            total = 0
+
+            for v_prev in range(v_min, v_max + 1):
+                if m == 2:
+                    u_min = u_max = sum(rest_shard)
+                else:
+                    u_min = max(
+                        max(rest_shard),
+                        ceil((sum(rest_shard) - v_prev) / (m - 2)),
+                    )
+                    u_max = sum(rest_shard) - (m - 2) * v_prev
+
+                u_min = max(u_min, v_prev, u_m - last_shard, 0)
+                u_max = min(u_max, sum(rest_shard), u_m)
+
+                for u_prev in range(u_min, u_max + 1):
+                    if not (
+                        0 <= u_m - u_prev <= min(last_shard, self.total_number - u_prev)
+                    ):
+                        continue
+                    if not (0 <= last_shard - v_m - u_m + u_prev <= (u_prev - v_prev)):
+                        continue
+
+                    total += (
+                        comb(v_prev, v_m)
+                        * comb(u_prev - v_prev, last_shard + u_prev - u_m - v_m)
+                        * comb(self.total_number - u_prev, u_m - u_prev)
+                        * bivariate_cases_recursive(u_prev, v_prev, rest_shard)
+                    )
+            return total
+
+        return bivariate_cases_recursive(
+            number_covered, number_intersect, tuple(self.shard_sizes)
+        )
+
+    def bivariate_prob(self, number_covered: int, number_intersect: int) -> float:
+        """Probability for (|⋃P_i|,|⋂P_i|)=(u,v)."""
+        return self.bivariate_cases(number_covered, number_intersect) / prod(
+            comb(self.total_number, n) for n in self.shard_sizes
+        )
+
+    # jaccard probability for a given numerator and denominator is bivariate_prob(numerator, denominator)
+    def jaccard_prob(self, numerator: int, denominator: int) -> float:
+        gcd_jaccard = gcd(numerator, denominator)
+        simplified = (numerator // gcd_jaccard, denominator // gcd_jaccard)
+        possible_numerators = [
+            k * simplified[0] for k in range(1, self.party_number + 1)
+        ]
+        possible_denominators = [
+            k * simplified[1] for k in range(1, self.party_number + 1)
+        ]
+        possible_combinations = list(zip(possible_numerators, possible_denominators))
+        jaccard_prob = sum(self.bivariate_prob(n, d) for n, d in possible_combinations)
+        return jaccard_prob
 
     # def jaccard_prob(self, indices: Iterable[int]) -> float:
     #     return self.jaccard(indices) * self.union_prob(sum(self.shard_sizes[i] for i in indices))
@@ -147,14 +247,14 @@ class AnalyticalResult:
 
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(1000, [500, 600])
+    compute = AnalyticalResult(100, [50, 40, 60])
     collusion_probability = compute.union_prob(100)
-    union_size = 940
+    union_size = 60
     union_pmf = compute.union_prob(union_size)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
-    intersect_size = 340
+    intersect_size = 20
     intersect_pmf = compute.intersect_prob(intersect_size)
 
     print("sigma =", sigma_value)
@@ -164,12 +264,15 @@ if __name__ == "__main__":
     print(f"probability that intersect size is {intersect_size} =", intersect_pmf)
 
     # Calculate Jaccard index for two parties
-    if compute.party_number == 2:
-        expected_jaccard = compute.expected_jaccard()
-        estimated_jaccard = compute.estimated_jaccard()
+    # if compute.party_number == 2:
+    #     expected_jaccard = compute.expected_jaccard()
+    #     estimated_jaccard = compute.estimated_jaccard()
 
-        print(f"Expected Jaccard index: {expected_jaccard}")
-        print(f"Estimated Jaccard index: {estimated_jaccard}")
-        print(
-            f"Percentage difference: {(expected_jaccard - estimated_jaccard)*100/expected_jaccard}%"
-        )
+    #     print(f"Expected Jaccard index: {expected_jaccard}")
+    #     print(f"Estimated Jaccard index: {estimated_jaccard}")
+    #     print(
+    #         f"Percentage difference: {(expected_jaccard - estimated_jaccard)*100/expected_jaccard}%"
+    #     )
+    pair = (60, 40)
+    bivariate_prob = compute.bivariate_prob(*pair)
+    print(f"bivariate probability for {pair} = {bivariate_prob}")
