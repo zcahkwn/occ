@@ -4,12 +4,10 @@ import matplotlib as mpl
 from matplotlib.colors import LogNorm, SymLogNorm
 from math import comb, prod
 from pathlib import Path
-
-from occenv.analytical import AnalyticalResult
-from occenv.constants import FIGURE_DIR
-
 from matplotlib.patches import Ellipse
 from mpl_toolkits.mplot3d import Axes3D
+from occenv.analytical import AnalyticalResult
+from occenv.constants import FIGURE_DIR
 
 try:
     import plotly.graph_objects as go
@@ -17,9 +15,6 @@ try:
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
-
-
-import numpy as np
 
 
 def gaussian_from_grid(U, V, Z):
@@ -130,13 +125,6 @@ def add_mahalanobis_contours(ax, mu, Sigma, xlim, ylim, ps=(0.68, 0.95, 0.997), 
     fmt = {lvl: f"{int(100*p)}%" for lvl, p in zip(cs.levels, ps)}
     ax.clabel(cs, inline=1, fontsize=9, fmt=fmt)
     return cs
-
-
-# -----------------------
-# Inputs
-# -----------------------
-N = 100
-shard_sizes = [50, 40, 60]
 
 
 # -----------------------
@@ -592,6 +580,14 @@ def plot_surface_plotly(U, V, Z, title="Bivariate distribution — 3D (interacti
 # -----------------------
 # Run
 # -----------------------
+
+# -----------------------
+# Inputs
+# -----------------------
+N = 200
+shard_sizes = [150, 140]
+
+
 ar = AnalyticalResult(total_number=N, shard_sizes=shard_sizes)
 U, V, Z, sum_probs, exact = compute_grid(ar, N, shard_sizes)
 

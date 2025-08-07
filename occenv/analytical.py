@@ -28,7 +28,7 @@ class AnalyticalResult:
                 * comb(number_covered, k)
                 * (union_cases_recursive(k, rest_shard) if rest_shard else 1)
                 for k in np.arange(
-                    start=max(rest_shard + [number_covered - last_shard]),
+                    start=max(rest_shard + [number_covered - last_shard, 0]),
                     stop=min(sum(rest_shard), number_covered) + 1,
                     step=1,
                 )
@@ -50,12 +50,12 @@ class AnalyticalResult:
         """
         Calculate the number of cases when the intersection of the shards have size intersect.
         """
-        # if not (
-        #     max(0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number)
-        #     <= overall_intersect
-        #     <= min(self.shard_sizes)
-        # ):
-        #     return 0.0
+        if not (
+            max(0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number)
+            <= overall_intersect
+            <= min(self.shard_sizes)
+        ):
+            return 0.0
 
         def intersect_cases_recursive(
             number_intersect: int, shard_sizes_m: list[int]
@@ -94,32 +94,29 @@ class AnalyticalResult:
         """
         Exact count of ordered m-tuples with |⋃P_i|=u and |⋂P_i|=v.
         """
-        # m=1 case
         # if len(self.shard_sizes) == 1:
-        #     return (
-        #         comb(self.total_number, n)
-        #         if (
-        #             number_covered == self.shard_sizes[0]
-        #             and number_intersect == self.shard_sizes[0]
+        #     if not (
+        #         number_covered == self.shard_sizes[0]
+        #         and number_intersect == self.shard_sizes[0]
+        #     ):
+        #         return 0
+        # else:
+        #     if not (
+        #         max(
+        #             *self.shard_sizes,
+        #             ceil(
+        #                 (sum(self.shard_sizes) - number_intersect)
+        #                 / (len(self.shard_sizes) - 1)
+        #             ),
         #         )
-        #         else 0
-        #     )
-
-        # if not (
-        #     max(
-        #         *self.shard_sizes,
-        #         ceil(
-        #             (sum(self.shard_sizes) - number_intersect)
-        #             / (len(self.shard_sizes) - 1)
-        #         ),
-        #     )
-        #     <= number_covered
-        #     <= min(
-        #         self.total_number,
-        #         sum(self.shard_sizes) - (len(self.shard_sizes) - 1) * number_intersect,
-        #     )
-        # ):
-        #     return 0
+        #         <= number_covered
+        #         <= min(
+        #             self.total_number,
+        #             sum(self.shard_sizes)
+        #             - (len(self.shard_sizes) - 1) * number_intersect,
+        #         )
+        #     ):
+        #         return 0
 
         @lru_cache(None)
         def bivariate_cases_recursive(
@@ -140,9 +137,6 @@ class AnalyticalResult:
             total = 0
 
             for v_prev in range(v_min, v_max + 1):
-                # if m == 2:
-                #     u_min = u_max = sum(rest_shard)
-                # else:
                 u_min = (
                     max(
                         *rest_shard,
@@ -152,9 +146,6 @@ class AnalyticalResult:
                     else max(rest_shard)
                 )
                 u_max = sum(rest_shard) - (m - 2) * v_prev
-
-                u_min = max(u_min, v_prev, u_m - last_shard, 0)
-                u_max = min(u_max, sum(rest_shard), u_m)
 
                 for u_prev in range(u_min, u_max + 1):
                     if not (
@@ -182,22 +173,30 @@ class AnalyticalResult:
             comb(self.total_number, n) for n in self.shard_sizes
         )
 
-    # jaccard probability for a given numerator and denominator is bivariate_prob(numerator, denominator)
     def jaccard_prob(self, numerator: int, denominator: int) -> float:
-        gcd_jaccard = gcd(numerator, denominator)
-        simplified = (numerator // gcd_jaccard, denominator // gcd_jaccard)
-        possible_numerators = [
-            k * simplified[0] for k in range(1, self.party_number + 1)
-        ]
-        possible_denominators = [
-            k * simplified[1] for k in range(1, self.party_number + 1)
-        ]
-        possible_combinations = list(zip(possible_numerators, possible_denominators))
-        jaccard_prob = sum(self.bivariate_prob(n, d) for n, d in possible_combinations)
-        return jaccard_prob
+        """
+        Probability that the Jaccard index equals intersection/union.
+        """
+        if not (0 < numerator <= denominator):
+            return 0.0
 
-    # def jaccard_prob(self, indices: Iterable[int]) -> float:
-    #     return self.jaccard(indices) * self.union_prob(sum(self.shard_sizes[i] for i in indices))
+        g = gcd(numerator, denominator)
+        a, b = numerator // g, denominator // g  # reduced ratio v/u
+
+        prob = 0.0
+        k = 1
+        while True:
+            v = k * a  # candidate intersection
+            u = k * b  # candidate union
+
+            # stop if the pair is impossible
+            if u > self.total_number or v > min(self.shard_sizes):
+                break
+
+            prob += self.bivariate_prob(u, v)  # (union, intersection)
+            k += 1
+
+        return prob
 
     def rho(self, indices: Iterable[int]) -> float:
         product = prod(self.shard_sizes[i] for i in indices)
@@ -251,32 +250,64 @@ class AnalyticalResult:
 
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(100, [50])
-    collusion_probability = compute.union_prob(100)
-    union_size = 60
-    union_pmf = compute.union_prob(union_size)
+    N = 100
+    shard_sizes = [30, 40]
+    compute = AnalyticalResult(N, shard_sizes)
+    collusion_probability = compute.union_prob(N)
+
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
-    intersect_size = 50
-    intersect_pmf = compute.intersect_prob(intersect_size)
-
     print("sigma =", sigma_value)
-    print("expected total intersection =", occ_value)
-    print("probability of collusion =", collusion_probability)
-    print(f"probability that union size is {union_size} =", union_pmf)
-    print(f"probability that intersect size is {intersect_size} =", intersect_pmf)
+    print("Expected total intersection =", occ_value)
+    print("Probability of collusion =", collusion_probability)
 
-    # Calculate Jaccard index for two parties
-    # if compute.party_number == 2:
-    #     expected_jaccard = compute.expected_jaccard()
-    #     estimated_jaccard = compute.estimated_jaccard()
+    union_test = 60
+    intersect_test = 20
+    union_pmf = compute.union_prob(union_test)
+    intersect_pmf = compute.intersect_prob(intersect_test)
 
-    #     print(f"Expected Jaccard index: {expected_jaccard}")
-    #     print(f"Estimated Jaccard index: {estimated_jaccard}")
-    #     print(
-    #         f"Percentage difference: {(expected_jaccard - estimated_jaccard)*100/expected_jaccard}%"
-    #     )
-    pair = (50, 40)
-    bivariate_prob = compute.bivariate_prob(*pair)
-    print(f"bivariate probability for {pair} = {bivariate_prob}")
+    print(
+        f"\n------Test bivariate probability-----\nWhen the union size is {union_test} and the intersect size is {intersect_test}, the following results are obtained: \n"
+    )
+    bivariate_prob = compute.bivariate_prob(union_test, intersect_test)
+    print(f"bivariate probability for {union_test, intersect_test} = {bivariate_prob}")
+
+    # Check whether marginal probability for bivariate probability conditional on union size adds up to intersect_pmf when intersect_size is fixed
+    marginal_prob_intersect = sum(
+        compute.bivariate_prob(union_size, intersect_test)
+        for union_size in range(1, N + 1)
+    )
+    print(
+        f"When intersect_size = {intersect_test}, sum of bivariate probability conditional on union size =",
+        marginal_prob_intersect,
+    )
+    print(f"Probability that intersect size is {intersect_test} =", intersect_pmf)
+    if intersect_pmf - marginal_prob_intersect < 1e-6:
+        print("=> The marginal probability conditional on union size is correct\n")
+    else:
+        print("=> The marginal probability conditional on union size is not correct\n")
+
+    # Check whether marginal probability for bivariate probability conditional on intersect size adds up to union_pmf when union_size is fixed
+    marginal_prob_union = sum(
+        compute.bivariate_prob(union_test, intersect_size)
+        for intersect_size in range(1, N + 1)
+    )
+    print(
+        f"When union_size = {union_test}, sum of bivariate probability conditional on intersect size =",
+        marginal_prob_union,
+    )
+    print(f"Probability that union size is {union_test} =", union_pmf)
+    if union_pmf - marginal_prob_union < 1e-6:
+        print("=> The marginal probability conditional on intersect size is correct\n")
+    else:
+        print(
+            "=> The marginal probability conditional on intersect size is not correct\n"
+        )
+
+    # Calculate Jaccard index
+    pair = (58, 12)
+    jaccard_prob = compute.jaccard_prob(6, 29)
+    print(
+        f"------Test Jaccard index------\nJaccard probability for {6, 29} = {jaccard_prob}"
+    )

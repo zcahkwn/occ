@@ -61,9 +61,19 @@ pip install -e ".[dev]"
 
 ---
 
-## Run Analysis
+## Run plots
 
-plot 
+Plot the PMF and its normal approximation of P(union=X) and P(intersection=Y)
 ```
 python scripts/plot_pmf.py
+```
+
+Plot the PMF of Jaccard Index
+```
+python scripts/plot_jaccard.py
+```
+
+Plot the bivariate distribution of P(union=X, intersection=Y)  
+```
+python scripts/plot_bivariate.py
 ```
