@@ -50,18 +50,18 @@ class AnalyticalResult:
         """
         Calculate the number of cases when the intersection of the shards have size intersect.
         """
-        if not (
-            max(0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number)
-            <= overall_intersect
-            <= min(self.shard_sizes)
-        ):
-            return 0.0
+        # if not (
+        #     max(0, sum(self.shard_sizes) - (self.party_number - 1) * self.total_number)
+        #     <= overall_intersect
+        #     <= min(self.shard_sizes)
+        # ):
+        #     return 0.0
 
         def intersect_cases_recursive(
             number_intersect: int, shard_sizes_m: list[int]
         ) -> int:
             if not shard_sizes_m:
-                # base case: intersection of zero parties is N (the universe)
+                # base case: intersection of zero parties is N
                 return 1 if number_intersect == self.total_number else 0
 
             last_shard = shard_sizes_m[-1]
@@ -95,31 +95,31 @@ class AnalyticalResult:
         Exact count of ordered m-tuples with |⋃P_i|=u and |⋂P_i|=v.
         """
         # m=1 case
-        if len(self.shard_sizes) == 1:
-            n = self.shard_sizes[0]
-            return (
-                comb(self.total_number, n)
-                if (number_covered == n and number_intersect == n)
-                else 0
-            )
+        # if len(self.shard_sizes) == 1:
+        #     return (
+        #         comb(self.total_number, n)
+        #         if (
+        #             number_covered == self.shard_sizes[0]
+        #             and number_intersect == self.shard_sizes[0]
+        #         )
+        #         else 0
+        #     )
 
-        if not (0 <= number_intersect <= min(self.shard_sizes)):
-            return 0
-
-        if number_covered < number_intersect:
-            return 0
-        u_lower = max(
-            max(self.shard_sizes),
-            ceil(
-                (sum(self.shard_sizes) - number_intersect) / (len(self.shard_sizes) - 1)
-            ),
-        )
-        u_upper = min(
-            self.total_number,
-            sum(self.shard_sizes) - (len(self.shard_sizes) - 1) * number_intersect,
-        )
-        if not (u_lower <= number_covered <= u_upper):
-            return 0
+        # if not (
+        #     max(
+        #         *self.shard_sizes,
+        #         ceil(
+        #             (sum(self.shard_sizes) - number_intersect)
+        #             / (len(self.shard_sizes) - 1)
+        #         ),
+        #     )
+        #     <= number_covered
+        #     <= min(
+        #         self.total_number,
+        #         sum(self.shard_sizes) - (len(self.shard_sizes) - 1) * number_intersect,
+        #     )
+        # ):
+        #     return 0
 
         @lru_cache(None)
         def bivariate_cases_recursive(
@@ -140,14 +140,18 @@ class AnalyticalResult:
             total = 0
 
             for v_prev in range(v_min, v_max + 1):
-                if m == 2:
-                    u_min = u_max = sum(rest_shard)
-                else:
-                    u_min = max(
-                        max(rest_shard),
+                # if m == 2:
+                #     u_min = u_max = sum(rest_shard)
+                # else:
+                u_min = (
+                    max(
+                        *rest_shard,
                         ceil((sum(rest_shard) - v_prev) / (m - 2)),
                     )
-                    u_max = sum(rest_shard) - (m - 2) * v_prev
+                    if m > 2
+                    else max(rest_shard)
+                )
+                u_max = sum(rest_shard) - (m - 2) * v_prev
 
                 u_min = max(u_min, v_prev, u_m - last_shard, 0)
                 u_max = min(u_max, sum(rest_shard), u_m)
@@ -247,14 +251,14 @@ class AnalyticalResult:
 
 
 if __name__ == "__main__":
-    compute = AnalyticalResult(100, [50, 40, 60])
+    compute = AnalyticalResult(100, [50])
     collusion_probability = compute.union_prob(100)
     union_size = 60
     union_pmf = compute.union_prob(union_size)
     sigma_value = compute.compute_sigma()
     occ_value = compute.occ_value()
 
-    intersect_size = 20
+    intersect_size = 50
     intersect_pmf = compute.intersect_prob(intersect_size)
 
     print("sigma =", sigma_value)
@@ -273,6 +277,6 @@ if __name__ == "__main__":
     #     print(
     #         f"Percentage difference: {(expected_jaccard - estimated_jaccard)*100/expected_jaccard}%"
     #     )
-    pair = (60, 40)
+    pair = (50, 40)
     bivariate_prob = compute.bivariate_prob(*pair)
     print(f"bivariate probability for {pair} = {bivariate_prob}")
