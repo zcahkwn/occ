@@ -17,7 +17,7 @@ from occenv.plotting_2d import plot_line_graph, plot_pmf_with_normals
 from occenv.approximated import ApproximatedResult
 
 N = 200
-shard_sizes = [150, 140]
+shard_sizes = [100, 100, 100]
 m = len(shard_sizes)
 alpha = [n / N for n in shard_sizes]
 
@@ -82,12 +82,12 @@ for problem in problems:
     plot_line_graph(
         numbers_range,
         ccdf,
-        f"{problem} Complementary Cumulative Distribution Function",
+        f"{problem} CCDF for N={N}, $S_{len(shard_sizes)}$={shard_sizes}",
         f"{problem} size ($N')",
     )
     plot_line_graph(
         numbers_range,
         cdf,
-        f"{problem} Cumulative Distribution Function",
+        f"{problem} CDF for N={N}, $S_{len(shard_sizes)}$={shard_sizes}",
         f"{problem} size ($N')",
     )

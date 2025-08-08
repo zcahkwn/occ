@@ -6,14 +6,14 @@ from scipy.stats import norm
 def mu_calculation(x_values: list[float], pmf: list[float]) -> float:
     x_arr = np.array(x_values, dtype=float)
     p_arr = np.array(pmf, dtype=float)
-    return float(np.sum(x_arr * p_arr))
+    return float(np.sum(x_arr * p_arr))  # Mean
 
 
 def sigma_calculation(x_values: list[float], pmf: list[float]) -> float:
     mu = mu_calculation(x_values, pmf)
     x_arr = np.array(x_values, dtype=float)
     p_arr = np.array(pmf, dtype=float)
-    return float(np.sqrt(np.sum(((x_arr - mu) ** 2) * p_arr)))
+    return float(np.sqrt(np.sum(((x_arr - mu) ** 2) * p_arr)))  # Standard deviation
 
 
 def mae_calculation(normal_pdf: list[float], approx_pdf: list[float]) -> float:
@@ -39,9 +39,9 @@ def discretize_normal_pmf(x_vals: list[float], mu: float, sigma: float) -> list[
     if sigma is None or sigma <= 0:
         return np.zeros_like(x)
 
-    # Calculatecell boundaries (midpoints)
+    # Calculate cell boundaries (midpoints)
     mids = (x[1:] + x[:-1]) / 2
     edges = np.concatenate(([-np.inf], mids, [np.inf]))
 
-    # Calculatemass per cell = CDF difference
+    # Calculate mass per cell = CDF difference
     return np.diff(norm.cdf(edges, loc=mu, scale=sigma))
