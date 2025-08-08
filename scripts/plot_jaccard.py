@@ -1,16 +1,25 @@
-from math import comb, prod, ceil, gcd, sqrt, pi, exp
-from functools import lru_cache
+"""
+This script plots the Jaccard index PMF for a given N and shard sizes.
+It also calculates the MAE and SSE of the empirical PMF and the approximated normal distribution.
+"""
+
 from fractions import Fraction
 from occenv.analytical import AnalyticalResult
-import numpy as np
-import matplotlib.pyplot as plt
+from occenv.approximated import ApproximatedResult
+from occenv.utils import (
+    mu_calculation,
+    sigma_calculation,
+    mae_calculation,
+    sse_calculation,
+    discretize_normal_pmf,
+)
+from occenv.plotting import plot_hist_with_normal, plot_stem_pmf
 
-N = 200
-shard_sizes = [150, 160, 170]
-
+N = 300
+shard_sizes = [250, 220]
 analytical = AnalyticalResult(N, shard_sizes)
 
-# build Jaccard index PMF
+# --- Build Jaccard index PMF ---
 ratios = set()
 for v in range(0, min(shard_sizes) + 1):
     for u in range(max(v, 1), N + 1):
@@ -24,70 +33,40 @@ for ratio in ratios:
         jaccard_list.append(float(ratio))
         prob_jaccard_list.append(prob_jaccard)
 
-# mean & std of the distribution
-xs_arr = np.array(jaccard_list)
-ps_arr = np.array(prob_jaccard_list)
-mu = float(np.sum(xs_arr * ps_arr))
-sigma = float(sqrt(np.sum(((xs_arr - mu) ** 2) * ps_arr)))
+# --- Calculate the mean, std of the distribution and approximated expected Jaccard index ---
+mu = mu_calculation(jaccard_list, prob_jaccard_list)
+sigma = sigma_calculation(jaccard_list, prob_jaccard_list)
+jaccard_mu_approx = ApproximatedResult(N, shard_sizes).jaccard_mu_approx()
 
-# Approximated expected Jaccard index
-intersect_expect = np.prod([shard_size / N for shard_size in shard_sizes])
-union_expect = 1 - np.prod([1 - shard_size / N for shard_size in shard_sizes])
-jaccard_approx = intersect_expect / union_expect
-
-
-"""
-Plot the Jaccard index PMF
-"""
-
-# Plot histogram
-plt.figure(figsize=(9, 4))
-bins = np.linspace(
-    0, max(jaccard_list) + 1e-6, 100
-)  # the smaller the bin size, the thicker the bars
-plt.hist(
+# --- Plot the Jaccard index PMF ---
+plot_hist_with_normal(
     jaccard_list,
-    bins=bins,
-    weights=prob_jaccard_list,
-    density=True,
-    alpha=0.4,
-    label="empirical pmf",
+    prob_jaccard_list,
+    mu,
+    sigma,
+    title=f"Jaccard Index – Histogram vs Normal fit (N={N}, shards={shard_sizes})",
+    xlabel="Jaccard index",
+    vlines=[
+        (mu, f"mean of empirical pmf={mu:.2f}", "b", "-"),
+        (jaccard_mu_approx, f"Expected Jaccard={jaccard_mu_approx:.2f}", "r", "--"),
+    ],
+    bins=300,
 )
 
-# normal pdf overlay
-x_grid = np.linspace(0, max(jaccard_list), 400)
-norm_pdf = (1 / (sigma * sqrt(2 * pi))) * np.exp(-((x_grid - mu) ** 2) / (2 * sigma**2))
-plt.plot(x_grid, norm_pdf, label=f"normal pdf with mean={mu:.2f} and std={sigma:.2f}")
-
-# vertical reference lines
-plt.axvline(
-    mu, linestyle="-", color="b", label=f"mean of empirical pmf={mu:.2f}"
-)  # mean of empirical pmf
-plt.axvline(
-    jaccard_approx,
-    linestyle="--",
-    color="r",
-    label=f"approx of expected Jaccard index={jaccard_approx:.2f}",
-)  # approximated expected Jaccard index
-plt.legend()
-plt.xlabel("Jaccard index")
-plt.ylabel("Density")
-plt.title(f"Jaccard index – Histogram vs Normal fit (N={N}, shards={shard_sizes})")
-plt.tight_layout()
-
-
-# Stem plot
-plt.figure(figsize=(9, 4))
-plt.stem(jaccard_list, prob_jaccard_list)
-# draw a line to show intersection/union value in the plot
-plt.axvline(
-    x=intersect_expect / union_expect,
-    color="red",
-    linestyle="--",
-    label=f"approx of expected Jaccard index={jaccard_approx:.2f}",
+plot_stem_pmf(
+    jaccard_list,
+    prob_jaccard_list,
+    title=f"Jaccard – Stem PMF (N={N}, shards={shard_sizes})",
+    xlabel="Jaccard index",
+    vlines=[
+        (mu, f"mean of empirical pmf={mu:.2f}", "b", "-"),
+        (jaccard_mu_approx, f"Expected Jaccard = {jaccard_mu_approx:.3f}", "r", "--"),
+    ],
 )
-plt.legend()
-plt.xlabel("Jaccard index")
-plt.ylabel("Probability")
-plt.title(f"Jaccard index - Stem plot (N={N}, shards={shard_sizes})")
-plt.tight_layout()
+
+# --- Calculate the mae and sse of the empirical pmf and the approximated normal distribution ---
+pmf_norm = discretize_normal_pmf(jaccard_list, mu, sigma)
+mae = mae_calculation(prob_jaccard_list, pmf_norm)
+sse = sse_calculation(prob_jaccard_list, pmf_norm)
+print(f"MAE: {mae:.4f}, SSE: {sse:.4f}")
+print("sum pmf_emp:", sum(prob_jaccard_list), "sum pmf_norm:", sum(pmf_norm))

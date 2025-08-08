@@ -1,4 +1,4 @@
-# OCC
+# A Rapid Estimation of Distributional Statistics in Probabilistic Data Structures, Graph Models, and Cryptography
 
 ## Setup
 
