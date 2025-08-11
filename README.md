@@ -63,9 +63,23 @@ pip install -e ".[dev]"
 
 ## Run plots
 
+### For univariate distributions
+
 Plot the PMF and its normal approximation of P(union=X) and P(intersection=Y)
 ```
 python scripts/plot_pmf.py
+```
+
+Plot the heatmap for different combinations of n_1,n_2 (m=2), when union / intersection values are fixed
+```
+python scripts/plot_univariate_heatmap.py
+```
+
+### For bivariate distributions
+
+Plot the bivariate distribution of P(union=X, intersection=Y)  
+```
+python scripts/plot_bivariate.py
 ```
 
 Plot the PMF of Jaccard Index
@@ -73,7 +87,22 @@ Plot the PMF of Jaccard Index
 python scripts/plot_jaccard.py
 ```
 
-Plot the bivariate distribution of P(union=X, intersection=Y)  
+
+---
+
+## Run tests
+
+Test Monte Carlo simulation VS analytical results of
+1. univariate 
+2. bivariate 
+3. jaccard index distributions 
+
 ```
-python scripts/plot_bivariate.py
+pytest test_univariate_prob.py test_bivariate_prob.py test_jaccard.py
+```
+
+
+Test whether the marginal probabilities of bivariate distribution adds up
+```
+pytest test_marginal.py
 ```
