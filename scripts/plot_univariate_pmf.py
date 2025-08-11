@@ -5,7 +5,7 @@ The script also plots the reverse cumulative distribution and the cumulative dis
 """
 
 import numpy as np
-from occenv.analytical import AnalyticalResult
+from occenv.analytical_univariate import AnalyticalUnivariate
 from occenv.utils import (
     mu_calculation,
     sigma_calculation,
@@ -18,28 +18,22 @@ from occenv.approximated import ApproximatedResult
 
 N = 200
 shard_sizes = [100, 100, 100]
-m = len(shard_sizes)
-alpha = [n / N for n in shard_sizes]
 
-analytical = AnalyticalResult(N, shard_sizes)
+analytical = AnalyticalUnivariate(N, shard_sizes)
 approx = ApproximatedResult(N, shard_sizes)
 
 numbers_range = np.arange(0, N + 1, 1)
 x_continuous = np.linspace(min(numbers_range) - 1, max(numbers_range) + 1, 500)
 
-problems = ["union", "intersect"]
+problems = ["union", "intersection"]
 
 for problem in problems:
     # Calculate the PMF for the problem
-    globals()[f"{problem}_pmf"] = []
+    pmf = []
     prob_method = getattr(analytical, f"{problem}_prob")
     for number_in_range in numbers_range:
         probability = prob_method(number_in_range)
-        globals()[f"{problem}_pmf"].append(probability)
-
-    pmf = globals()[f"{problem}_pmf"]
-    mu_method = getattr(approx, f"{problem}_mu_approx")
-    sd_method = getattr(approx, f"{problem}_sd_approx")
+        pmf.append(probability)
 
     # Calculate the analytical mean and standard deviation of the discrete PMF
     mu_analytical = mu_calculation(numbers_range, pmf)
@@ -47,8 +41,10 @@ for problem in problems:
     normal_analytical = norm_pdf(x_continuous, mu_analytical, sigma_analytical)
 
     # Calculate the approximated mean and standard deviation of the discrete PMF (using CLT)
-    mu_approx = mu_method()
-    sd_approx = sd_method()
+    mu_approx_method = getattr(approx, f"{problem}_mu_approx")
+    sd_approx_method = getattr(approx, f"{problem}_sd_approx")
+    mu_approx = mu_approx_method()
+    sd_approx = sd_approx_method()
     normal_approx = norm_pdf(x_continuous, mu_approx, sd_approx)
 
     # Error between the two normal distributions
@@ -83,11 +79,11 @@ for problem in problems:
         numbers_range,
         ccdf,
         f"{problem} CCDF for N={N}, $S_{len(shard_sizes)}$={shard_sizes}",
-        f"{problem} size ($N')",
+        f"{problem} size ($N'$)",
     )
     plot_line_graph(
         numbers_range,
         cdf,
         f"{problem} CDF for N={N}, $S_{len(shard_sizes)}$={shard_sizes}",
-        f"{problem} size ($N')",
+        f"{problem} size ($N'$)",
     )

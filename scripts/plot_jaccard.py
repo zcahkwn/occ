@@ -4,7 +4,7 @@ It also calculates the MAE and SSE of the empirical PMF and the approximated nor
 """
 
 from fractions import Fraction
-from occenv.analytical import AnalyticalResult
+from occenv.analytical_bivariate import AnalyticalBivariate
 from occenv.approximated import ApproximatedResult
 from occenv.utils import (
     mu_calculation,
@@ -17,7 +17,7 @@ from occenv.plotting_2d import plot_hist_with_normal, plot_stem_pmf
 
 N = 300
 shard_sizes = [250, 220, 150]
-analytical = AnalyticalResult(N, shard_sizes)
+analytical = AnalyticalBivariate(N, shard_sizes)
 
 # --- Build Jaccard index PMF ---
 ratios = set()
