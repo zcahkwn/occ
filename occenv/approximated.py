@@ -90,6 +90,40 @@ class ApproximatedResult:
         return self.rho(list(range(self.party_number)))
 
     # --- Bivariate approximated results ---
+    def bivariate_mu_approx(self) -> np.ndarray:
+        return np.array([self.union_mu_approx(), self.intersection_mu_approx()])
+
+    def bivariate_cov_approx(self) -> float:
+        a = self.total_number * self.intersection_p_approx()
+        b = (
+            self.total_number
+            * (self.total_number - 1)
+            * self.intersection_p_approx()
+            * (
+                1
+                - np.prod(
+                    [
+                        (self.total_number - n_i) / (self.total_number - 1)
+                        for n_i in self.shard_sizes
+                    ]
+                )
+            )
+        )
+        c = self.total_number**2 * self.intersection_p_approx() * self.union_p_approx()
+        return a + b - c
+
+    def bivariate_matrix_approx(self) -> np.ndarray:
+        return np.array(
+            [
+                [self.union_var_approx(), self.bivariate_cov_approx()],
+                [self.bivariate_cov_approx(), self.intersection_var_approx()],
+            ]
+        )
+
+    def bivariate_corr_approx(self) -> float:
+        return self.bivariate_cov_approx() / (
+            self.union_sd_approx() * self.intersection_sd_approx()
+        )
 
     # --- Jaccard index approximated results ---
 
@@ -99,3 +133,13 @@ class ApproximatedResult:
             if self.union_p_approx() > 0
             else 0
         )
+
+
+if __name__ == "__main__":
+    ar = ApproximatedResult(200, [150, 140, 160])
+    print(ar.intersection_p_approx())
+    print(ar.union_p_approx())
+    print(ar.bivariate_cov_approx())
+    print(ar.bivariate_corr_approx())
+    print(ar.bivariate_mu_approx())
+    print(ar.bivariate_matrix_approx())

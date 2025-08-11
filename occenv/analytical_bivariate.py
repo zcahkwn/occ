@@ -4,7 +4,6 @@ from typing import Iterable
 from functools import lru_cache
 import numpy as np
 import itertools
-from occenv.utils import mu_calculation
 
 
 class AnalyticalBivariate:
@@ -96,6 +95,45 @@ class AnalyticalBivariate:
             comb(self.total_number, n) for n in self.shard_sizes
         )
 
+    def bivariate_mu(self) -> np.ndarray:
+        U = range(0, self.total_number + 1)
+        V = range(0, min(self.shard_sizes) + 1)
+
+        EU = sum(u * self.bivariate_prob(u, v) for u in U for v in V)
+        EV = sum(v * self.bivariate_prob(u, v) for u in U for v in V)
+        return np.array([EU, EV])
+
+    def bivariate_var(self) -> np.ndarray:
+        U = range(max(self.shard_sizes), self.total_number + 1)
+        V = range(0, min(self.shard_sizes) + 1)
+
+        EU = self.bivariate_mu()[0]
+        EV = self.bivariate_mu()[1]
+        EU2 = sum(
+            (u * u) * self.bivariate_prob(u, v) for u, v in itertools.product(U, V)
+        )
+        EV2 = sum(
+            (v * v) * self.bivariate_prob(u, v) for u, v in itertools.product(U, V)
+        )
+        return np.array([EU2 - EU * EU, EV2 - EV * EV])
+
+    def bivariate_cov(self) -> float:
+        U = range(0, self.total_number + 1)
+        V = range(0, min(self.shard_sizes) + 1)
+
+        EU = self.bivariate_mu()[0]
+        EV = self.bivariate_mu()[1]
+        EUV = sum((u * v) * self.bivariate_prob(u, v) for u in U for v in V)
+        return EUV - EU * EV
+
+    def bivariate_matrix(self) -> np.ndarray:
+        return np.array(
+            [
+                [self.bivariate_var()[0], self.bivariate_cov()],
+                [self.bivariate_cov(), self.bivariate_var()[1]],
+            ]
+        )
+
     # ---- Analytical result for jaccard index pmf ----
     def jaccard_prob(self, numerator: int, denominator: int) -> float:
         """
@@ -153,3 +191,9 @@ class AnalyticalBivariate:
                 total += self.jaccard_prob(v, u)
 
         return total
+
+
+if __name__ == "__main__":
+    ana = AnalyticalBivariate(200, [150, 140, 160])
+    print(ana.bivariate_mu())
+    print(ana.bivariate_matrix())

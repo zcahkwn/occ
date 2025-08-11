@@ -8,7 +8,7 @@ from occenv.analytical_bivariate import AnalyticalBivariate
 from occenv.approximated import ApproximatedResult
 from occenv.utils import (
     mu_calculation,
-    sigma_calculation,
+    sd_calculation,
     mae_calculation,
     sse_calculation,
     discretize_normal_pmf,
@@ -35,7 +35,7 @@ for ratio in ratios:
 
 # --- Calculate the mean, std of the distribution and approximated expected Jaccard index ---
 mu = mu_calculation(jaccard_list, prob_jaccard_list)
-sigma = sigma_calculation(jaccard_list, prob_jaccard_list)
+sd = sd_calculation(jaccard_list, prob_jaccard_list)
 jaccard_mu_approx = ApproximatedResult(N, shard_sizes).jaccard_mu_approx()
 
 # --- Plot the Jaccard index PMF ---
@@ -43,7 +43,7 @@ plot_hist_with_normal(
     jaccard_list,
     prob_jaccard_list,
     mu,
-    sigma,
+    sd,
     title=f"Jaccard Index – Histogram vs Normal fit (N={N}, shards={shard_sizes})",
     xlabel="Jaccard index",
     vlines=[
@@ -65,7 +65,7 @@ plot_stem_pmf(
 )
 
 # --- Calculate the mae and sse of the empirical pmf and the approximated normal distribution ---
-pmf_norm = discretize_normal_pmf(jaccard_list, mu, sigma)
+pmf_norm = discretize_normal_pmf(jaccard_list, mu, sd)
 mae = mae_calculation(prob_jaccard_list, pmf_norm)
 sse = sse_calculation(prob_jaccard_list, pmf_norm)
 print(f"MAE: {mae:.4f}, SSE: {sse:.4f}")

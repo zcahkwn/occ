@@ -1,0 +1,31 @@
+"""
+Test the approximated results vs analytical results
+"""
+
+import pytest
+from occenv.approximated import ApproximatedResult
+from occenv.analytical_univariate import AnalyticalUnivariate
+from occenv.analytical_bivariate import AnalyticalBivariate
+
+
+@pytest.mark.parametrize(
+    "total_number, shard_sizes",
+    [
+        (100, [10, 20, 30]),
+        (100, [10, 20, 30, 40]),
+        (100, [40, 50]),
+    ],
+)
+def test_approx(total_number, shard_sizes):
+
+    univ = AnalyticalUnivariate(total_number, shard_sizes)
+    biv = AnalyticalBivariate(total_number, shard_sizes)
+    approx = ApproximatedResult(total_number, shard_sizes)
+
+    assert approx.union_mu_approx() == pytest.approx(univ.union_mu(), abs=0.01)
+    assert approx.intersection_mu_approx() == pytest.approx(
+        univ.intersection_mu(), abs=0.01
+    )
+    assert approx.jaccard_mu_approx() == pytest.approx(biv.jaccard_mu(), abs=0.01)
+    # assert approx.union_var_approx() == ana.union_var_approx()
+    # assert approx.union_sd_approx() == ana.union_sd_approx()

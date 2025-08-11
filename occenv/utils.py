@@ -10,12 +10,17 @@ def mu_calculation(x_values: list[float], pmf: list[float]) -> float:
     return float(np.sum(x_arr * p_arr))
 
 
-# Statistical standard deviation of a discrete distribution
-def sigma_calculation(x_values: list[float], pmf: list[float]) -> float:
+# Statistical variance of a discrete distribution
+def var_calculation(x_values: list[float], pmf: list[float]) -> float:
     mu = mu_calculation(x_values, pmf)
     x_arr = np.array(x_values, dtype=float)
     p_arr = np.array(pmf, dtype=float)
-    return float(np.sqrt(np.sum(((x_arr - mu) ** 2) * p_arr)))
+    return float(np.sum((x_arr - mu) ** 2 * p_arr))
+
+
+# Statistical standard deviation of a discrete distribution
+def sd_calculation(x_values: list[float], pmf: list[float]) -> float:
+    return np.sqrt(var_calculation(x_values, pmf))
 
 
 # Mean absolute error between two lists

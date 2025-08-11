@@ -1,6 +1,6 @@
 from math import comb, prod
 import numpy as np
-from occenv.utils import mu_calculation
+from occenv.utils import mu_calculation, var_calculation
 
 
 class AnalyticalUnivariate:
@@ -43,6 +43,12 @@ class AnalyticalUnivariate:
 
     def union_mu(self) -> float:
         return mu_calculation(
+            range(self.total_number + 1),
+            [self.union_prob(u) for u in range(self.total_number + 1)],
+        )
+
+    def union_var(self) -> float:
+        return var_calculation(
             range(self.total_number + 1),
             [self.union_prob(u) for u in range(self.total_number + 1)],
         )
@@ -91,6 +97,12 @@ class AnalyticalUnivariate:
 
     def intersection_mu(self) -> float:
         return mu_calculation(
+            range(self.total_number + 1),
+            [self.intersection_prob(v) for v in range(self.total_number + 1)],
+        )
+
+    def intersection_var(self) -> float:
+        return var_calculation(
             range(self.total_number + 1),
             [self.intersection_prob(v) for v in range(self.total_number + 1)],
         )

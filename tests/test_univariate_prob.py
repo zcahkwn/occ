@@ -10,7 +10,7 @@ import pytest
 from collections import Counter
 from occenv.simulate import Simulate
 from occenv.analytical_univariate import AnalyticalUnivariate
-from occenv.utils import mu_calculation
+from occenv.utils import mu_calculation, var_calculation
 
 
 @pytest.mark.parametrize(
@@ -20,9 +20,9 @@ from occenv.utils import mu_calculation
         # [7],
         # [10],
         # [6, 3],
-        # [5, 6],
-        # [10, 6],
-        # [3, 2, 4],
+        [5, 6],
+        [10, 6],
+        [3, 2, 4],
         [7, 6, 9],
         [3, 5, 7, 3],
     ],
@@ -71,3 +71,11 @@ def test_univariate_pmf_and_mean(shard_sizes):
 
     assert E_union_ana == pytest.approx(E_union_emp, abs=0.01)
     assert E_inter_ana == pytest.approx(E_inter_emp, abs=0.01)
+
+    # --- Compare variances ---
+    var_union_emp = var_calculation(x_u, pmf_u_emp)
+    var_union_ana = ana.union_var()
+    var_inter_emp = var_calculation(x_v, pmf_v_emp)
+    var_inter_ana = ana.intersection_var()
+    assert var_union_ana == pytest.approx(var_union_emp, abs=0.01)
+    assert var_inter_ana == pytest.approx(var_inter_emp, abs=0.01)

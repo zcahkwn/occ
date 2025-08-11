@@ -92,7 +92,8 @@ python scripts/plot_jaccard.py
 
 ## Run tests
 
-Test Monte Carlo simulation VS analytical results of the following distributions
+### Monte Carlo simulation VS analytical results 
+Test for the following distributions:
 1. univariate 
 2. bivariate 
 3. jaccard index 
@@ -101,8 +102,15 @@ Test Monte Carlo simulation VS analytical results of the following distributions
 pytest test_univariate_prob.py test_bivariate_prob.py test_jaccard.py
 ```
 
-
+### Analytical results sanity check
 Test whether the marginal probabilities of bivariate distribution adds up
 ```
 pytest test_marginal.py
 ```
+
+### Analytical result VS Approximated result
+```
+pytest test_approx.py
+```
+
+

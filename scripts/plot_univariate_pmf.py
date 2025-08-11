@@ -8,7 +8,7 @@ import numpy as np
 from occenv.analytical_univariate import AnalyticalUnivariate
 from occenv.utils import (
     mu_calculation,
-    sigma_calculation,
+    sd_calculation,
     mae_calculation,
     sse_calculation,
     norm_pdf,
@@ -37,7 +37,7 @@ for problem in problems:
 
     # Calculate the analytical mean and standard deviation of the discrete PMF
     mu_analytical = mu_calculation(numbers_range, pmf)
-    sigma_analytical = sigma_calculation(numbers_range, pmf)
+    sigma_analytical = sd_calculation(numbers_range, pmf)
     normal_analytical = norm_pdf(x_continuous, mu_analytical, sigma_analytical)
 
     # Calculate the approximated mean and standard deviation of the discrete PMF (using CLT)
