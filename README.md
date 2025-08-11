@@ -70,7 +70,7 @@ Plot the PMF and its normal approximation of P(union=X) and P(intersection=Y)
 python scripts/plot_pmf.py
 ```
 
-Plot the heatmap for different combinations of n_1,n_2 (m=2), when union / intersection values are fixed
+Plot the heatmap for different combinations of $n_1,n_2$ (when $m=2$), when union / intersection values are fixed
 ```
 python scripts/plot_univariate_heatmap.py
 ```
