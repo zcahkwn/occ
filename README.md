@@ -92,10 +92,10 @@ python scripts/plot_jaccard.py
 
 ## Run tests
 
-Test Monte Carlo simulation VS analytical results of
+Test Monte Carlo simulation VS analytical results of the following distributions
 1. univariate 
 2. bivariate 
-3. jaccard index distributions 
+3. jaccard index 
 
 ```
 pytest test_univariate_prob.py test_bivariate_prob.py test_jaccard.py
