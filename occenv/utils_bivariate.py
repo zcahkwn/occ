@@ -96,7 +96,7 @@ class Gaussian2D:
 class BivariateGrid:
     """Holds (U, V, Z) and provides statistical utilities with no repetition."""
 
-    def __init__(self, U, V, Z):
+    def __init__(self, U: np.ndarray, V: np.ndarray, Z: np.ndarray):
         self.U = np.asarray(U)
         self.V = np.asarray(V)
         self.Z = np.asarray(Z, float)

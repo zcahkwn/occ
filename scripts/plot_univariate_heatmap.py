@@ -37,7 +37,9 @@ plot_dict = {
     "estimated_jaccard": {
         "title": f"Estimated Jaccard index with $N={N}$",
         "z": np.vectorize(
-            lambda n1, n2: ApproximatedResult(N, [n1, n2]).jaccard_mu_approx()
+            lambda n1, n2: ApproximatedResult(
+                N, [n1, n2]
+            ).jaccard_mu_approx_simplified()
         )(x, y),
     },
     "jaccard_difference": {
@@ -46,7 +48,9 @@ plot_dict = {
             x, y
         )
         - np.vectorize(
-            lambda n1, n2: ApproximatedResult(N, [n1, n2]).jaccard_mu_approx()
+            lambda n1, n2: ApproximatedResult(
+                N, [n1, n2]
+            ).jaccard_mu_approx_simplified()
         )(x, y),
         "vmax": 0.05,
     },

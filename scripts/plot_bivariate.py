@@ -50,7 +50,6 @@ fig3d, ax3d = plot_surface_3d(
 add_floor_contours(ax3d, grid.U, grid.V, grid.Z, levels=12, offset=0.0, cmap="viridis")
 plt.show()
 
-# Optional interactive 3D
 plot_surface_plotly(grid.U, grid.V, grid.Z)
 
 # ---- Fit Gaussian and compute diagnostics using classes ----

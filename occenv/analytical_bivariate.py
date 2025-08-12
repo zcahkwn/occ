@@ -168,6 +168,15 @@ class AnalyticalBivariate:
             )
         )
 
+    def jaccard_var(self) -> float:
+        mu = self.jaccard_mu()
+        return sum(
+            (v / u - mu) ** 2 * self.bivariate_prob(u, v)
+            for u, v in itertools.product(
+                range(1, self.total_number + 1), range(0, min(self.shard_sizes) + 1)
+            )
+        )
+
     def jaccard_cdf_analytical(self, t: float) -> float:
         """
         Compute P(J < t) analytically by:

@@ -37,6 +37,9 @@ for ratio in ratios:
 mu = mu_calculation(jaccard_list, prob_jaccard_list)
 sd = sd_calculation(jaccard_list, prob_jaccard_list)
 jaccard_mu_approx = ApproximatedResult(N, shard_sizes).jaccard_mu_approx()
+jaccard_sd_approx = ApproximatedResult(N, shard_sizes).jaccard_var_approx() ** 0.5
+print(f"jaccard_mu: {mu}, jaccard_sd: {sd}")
+print(f"jaccard_mu_approx: {jaccard_mu_approx}, jaccard_sd_approx: {jaccard_sd_approx}")
 
 # --- Plot the Jaccard index PMF ---
 plot_hist_with_normal(
@@ -44,13 +47,11 @@ plot_hist_with_normal(
     prob_jaccard_list,
     mu,
     sd,
+    jaccard_mu_approx,
+    jaccard_sd_approx,
     title=f"Jaccard Index – Histogram vs Normal fit (N={N}, shards={shard_sizes})",
     xlabel="Jaccard index",
-    vlines=[
-        (mu, f"mean of empirical pmf={mu:.2f}", "b", "-"),
-        (jaccard_mu_approx, f"Expected Jaccard={jaccard_mu_approx:.2f}", "r", "--"),
-    ],
-    bins=300,
+    bins=200,
 )
 
 plot_stem_pmf(
@@ -60,7 +61,12 @@ plot_stem_pmf(
     xlabel="Jaccard index",
     vlines=[
         (mu, f"mean of empirical pmf={mu:.2f}", "b", "-"),
-        (jaccard_mu_approx, f"Expected Jaccard = {jaccard_mu_approx:.3f}", "r", "--"),
+        (
+            jaccard_mu_approx,
+            f"approximated expected Jaccard = {jaccard_mu_approx:.3f}",
+            "r",
+            "--",
+        ),
     ],
 )
 

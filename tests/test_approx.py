@@ -14,6 +14,7 @@ from occenv.analytical_bivariate import AnalyticalBivariate
         (100, [10, 20, 30]),
         (100, [10, 20, 30, 40]),
         (100, [40, 50]),
+        (200, [100, 100, 100]),
     ],
 )
 def test_approx(total_number, shard_sizes):
@@ -40,5 +41,6 @@ def test_approx(total_number, shard_sizes):
         biv.bivariate_matrix(), abs=0.01
     )
 
-    # For jaccard index, test mean
+    # For jaccard index, test mean, variance
     assert approx.jaccard_mu_approx() == pytest.approx(biv.jaccard_mu(), abs=0.01)
+    assert approx.jaccard_var_approx() == pytest.approx(biv.jaccard_var(), abs=0.01)

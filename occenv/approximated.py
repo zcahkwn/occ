@@ -128,6 +128,31 @@ class ApproximatedResult:
     # --- Jaccard index approximated results ---
 
     def jaccard_mu_approx(self) -> float:
+        j = (
+            self.intersection_p_approx() / self.union_p_approx()
+            if self.union_p_approx() > 0
+            else 0
+        )
+        second_delta = (
+            j * self.union_var_approx() - self.bivariate_cov_approx()
+        ) / self.union_mu_approx() ** 2
+        return j + second_delta
+
+    def jaccard_var_approx(self) -> float:
+        j = (
+            self.intersection_p_approx() / self.union_p_approx()
+            if self.union_p_approx() > 0
+            else 0
+        )
+        a = (
+            self.intersection_var_approx()
+            + j**2 * self.union_var_approx()
+            - 2 * j * self.bivariate_cov_approx()
+        )
+        b = self.union_mu_approx() ** 2
+        return a / b
+
+    def jaccard_mu_approx_simplified(self) -> float:
         return (
             self.intersection_p_approx() / self.union_p_approx()
             if self.union_p_approx() > 0
@@ -143,3 +168,6 @@ if __name__ == "__main__":
     print(ar.bivariate_corr_approx())
     print(ar.bivariate_mu_approx())
     print(ar.bivariate_matrix_approx())
+    print(ar.jaccard_mu_approx())
+    print(ar.jaccard_var_approx())
+    print(ar.jaccard_mu_approx_simplified())
