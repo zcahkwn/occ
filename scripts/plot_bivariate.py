@@ -1,5 +1,4 @@
 from occenv.analytical_bivariate import AnalyticalBivariate
-from occenv.approximated import ApproximatedResult
 from occenv.constants import FIGURE_DIR
 from occenv.plotting_3d import (
     plot_heatmap_ellipse,
@@ -45,22 +44,8 @@ plot_surface_plotly(
     title=f"Bivariate distribution for N={N}, sizes={shard_sizes} — 3D (interactive)",
 )
 
-# Compare analytical and approximated mu and Sigma
-approx = ApproximatedResult(N, shard_sizes)
-approx_mu = approx.bivariate_mu_approx()
-approx_Sigma = approx.bivariate_matrix_approx()
-
-print("mu =", mu, "\napprox_mu =", approx_mu)
-print("Sigma =\n", Sigma, "\napprox_Sigma =\n", approx_Sigma)
-print(
-    "Eigenvalues =",
-    Gaussian2D(mu, Sigma).evals,
-    "\napprox_Eigenvalues =",
-    Gaussian2D(approx_mu, approx_Sigma).evals,
-)
-print(
-    "Eigenvectors (columns) =\n",
-    Gaussian2D(mu, Sigma).evecs,
-    "\napprox_Eigenvectors (columns) =\n",
-    Gaussian2D(approx_mu, approx_Sigma).evecs,
-)
+# Print mean vector, covariance matrix, eigenvalues and eigenvectors
+print("mu =", mu)
+print("Sigma =\n", Sigma)
+print("Eigenvalues =", Gaussian2D(mu, Sigma).evals)
+print("Eigenvectors (columns) =\n", Gaussian2D(mu, Sigma).evecs)

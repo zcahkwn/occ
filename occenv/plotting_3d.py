@@ -1,16 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import plotly.graph_objects as go
 from matplotlib.colors import LogNorm
-
 from occenv.utils_bivariate import Gaussian2D
-
-try:
-    import plotly.graph_objects as go
-
-    HAS_PLOTLY = True
-except ImportError:
-    HAS_PLOTLY = False
 
 
 def plot_heatmap(x, y, z, xlabel, ylabel, title, cmap, vmin, vmax, outpath=None):
