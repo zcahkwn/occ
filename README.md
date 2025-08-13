@@ -110,7 +110,7 @@ Test whether the marginal probabilities of bivariate distribution adds up
 pytest test_marginal.py
 ```
 
-### Analytical result VS Approximated result
+### Analytical result VS Approximated result (using CLT)
 ```
 pytest test_approx.py
 ```
