@@ -1,6 +1,4 @@
-import math
-from math import comb, prod, ceil, gcd
-from typing import Iterable
+from math import comb, prod, ceil
 from functools import lru_cache
 import numpy as np
 import itertools
@@ -134,72 +132,27 @@ class AnalyticalBivariate:
             ]
         )
 
-    # ---- Analytical result for jaccard index pmf ----
-    def jaccard_prob(self, numerator: int, denominator: int) -> float:
+    def bivariate_grid(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Probability that the Jaccard index equals numerator/denominator.
+        Build the grid (U, V, Z) from the analytical model.
         """
-        if not (0 < numerator <= denominator):
-            return 0.0
+        m, S = len(self.shard_sizes), sum(self.shard_sizes)
+        nmax, nmin = max(self.shard_sizes), min(self.shard_sizes)
 
-        g = gcd(numerator, denominator)
-        a, b = numerator // g, denominator // g  # reduced ratio v/u
+        U = np.arange(nmax, min(self.total_number, S) + 1)
+        V = np.arange(0, nmin + 1)
+        Z = np.zeros((len(V), len(U)), float)
+        for iv, v in enumerate(V):
+            u_lo = max(nmax, (S - v + (m - 2)) // (m - 1))
+            u_hi = min(self.total_number, S - (m - 1) * v)
+            if u_lo > u_hi:
+                continue
+            for u in range(u_lo, u_hi + 1):
+                prob = self.bivariate_prob(u, v)
+                if prob:
+                    Z[iv, u - U[0]] = prob
 
-        prob = 0.0
-        k = 1
-        while True:
-            v = k * a  # candidate intersection
-            u = k * b  # candidate union
-
-            # stop if the pair is impossible
-            if u > self.total_number or v > min(self.shard_sizes):
-                break
-
-            prob += self.bivariate_prob(u, v)  # (union, intersection)
-            k += 1
-
-        return prob
-
-    def jaccard_mu(self) -> float:
-        return sum(
-            v / u * self.bivariate_prob(u, v)
-            for u, v in itertools.product(
-                range(1, self.total_number + 1), range(0, min(self.shard_sizes) + 1)
-            )
-        )
-
-    def jaccard_var(self) -> float:
-        mu = self.jaccard_mu()
-        return sum(
-            (v / u - mu) ** 2 * self.bivariate_prob(u, v)
-            for u, v in itertools.product(
-                range(1, self.total_number + 1), range(0, min(self.shard_sizes) + 1)
-            )
-        )
-
-    def jaccard_cdf_analytical(self, t: float) -> float:
-        """
-        Compute P(J < t) analytically by:
-        - adding P(J=0) = sum_u P(U=u, V=0)
-        - plus sum of P(J = a/b) over all reduced ratios a/b < t
-        """
-
-        # P(J=0) when intersection is 0
-        p_zero = sum(self.bivariate_prob(u, 0) for u in range(1, self.total_number + 1))
-
-        total = p_zero
-        # Sum over all reduced fractions v/u with v/u < t
-        for u in range(1, self.total_number + 1):
-            # v must be <= min(u, nmin) to be feasible
-            upper_v = min([u] + self.shard_sizes)
-            for v in range(1, upper_v + 1):
-                if math.gcd(v, u) != 1:
-                    continue
-                if v / u >= t:
-                    continue
-                total += self.jaccard_prob(v, u)
-
-        return total
+        return U, V, Z
 
 
 if __name__ == "__main__":

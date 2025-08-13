@@ -4,6 +4,7 @@ Test that the analytical Jaccard index CDF matches the empirical Jaccard index C
 
 import pytest
 from occenv.simulate import Simulate
+from occenv.analytical_jaccard import AnalyticalJaccard
 from occenv.analytical_bivariate import AnalyticalBivariate
 
 
@@ -30,7 +31,8 @@ def test_jaccard_cdf(total_number, shard_sizes, thresholds):
         return s
 
     # Analytical CDF using analytical result
-    jaccard_ana = AnalyticalBivariate(total_number, shard_sizes)
+    ar = AnalyticalBivariate(total_number, shard_sizes)
+    jaccard_ana = AnalyticalJaccard(total_number, shard_sizes, ar)
 
     for t in thresholds:
         jaccard_cdf_emp_t = jaccard_cdf_emp(t)

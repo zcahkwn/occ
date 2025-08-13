@@ -1,36 +1,33 @@
 import numpy as np
 from math import comb, prod
 from matplotlib.patches import Ellipse
-
-# __all__ = [
-#     "Gaussian2D",
-#     "BivariateGrid",
-#     "gaussian_from_grid",
-#     "gaussian_from_grid_new",
-#     "draw_cov_ellipse",
-#     "compute_grid",
-#     "gaussian_on_grid",
-#     "compare_distributions",
-#     "mahalanobis_ks",
-#     "mardia_moments",
-#     "angle_uniformity",
-#     "conditional_linearity",
-#     "mardia_skewness",
-# ]
+from scipy.stats import chi2
 
 
-# ----------------------------
-# Core classes (minimal set)
-# ----------------------------
 class Gaussian2D:
-    """Convenience wrapper for a 2D Gaussian."""
+    """
+    Convenience wrapper for a 2D Gaussian, after mu and Sigma are calculated.
+    Doesn't matter if the original distribution is discrete or continuous.
+    """
 
-    def __init__(self, mu, Sigma):
-        self.mu = np.asarray(mu, float).reshape(2)
-        self.Sigma = np.asarray(Sigma, float).reshape(2, 2)
-        self._Sinv = np.linalg.inv(self.Sigma)
-        self._det = float(np.linalg.det(self.Sigma))
-        self._chol = None  # lazy
+    def __init__(
+        self,
+        mu: list[float, float],
+        Sigma: list[list[float, float], list[float, float]],
+    ):
+        self.mu = np.array(mu, float).reshape(2)  # mean vector
+        self.Sigma = np.array(Sigma, float).reshape(2, 2)  # covariance matrix
+        self._Sinv = np.linalg.inv(self.Sigma)  # inverse of the covariance matrix
+        self._det = float(
+            np.linalg.det(self.Sigma)
+        )  # determinant of the covariance matrix
+        self._chol = None  # Cholesky decomposition
+
+        # Compute eigendecomposition of the covariance matrix
+        evals, evecs = np.linalg.eigh(self.Sigma)
+        order = evals.argsort()[::-1]
+        self.evals = evals[order]  # eigenvalues (largest first)
+        self.evecs = evecs[:, order]  # eigenvectors (columns, largest eigenvalue first)
 
     @property
     def Sinv(self):
@@ -43,49 +40,48 @@ class Gaussian2D:
     @property
     def chol(self):
         if self._chol is None:
-            self._chol = np.linalg.cholesky(self.Sigma)
+            self._chol = np.linalg.cholesky(
+                self.Sigma
+            )  # calculate cholesky decomposition
         return self._chol
 
     def mahalanobis2(self, X):
-        """Return M^2 for points X (...,2)."""
+        """Return M^2 for points X (...,2). M² = (x - μ)ᵀ Σ⁻¹ (x - μ)"""
         X = np.asarray(X, float)
         dX = X - self.mu
         return np.einsum("...i,ij,...j->...", dX, self.Sinv, dX)
 
     def pdf(self, X):
-        """Unnormalized-safe 2D Gaussian pdf at points X (...,2)."""
+        """Unnormalized-safe 2D Gaussian pdf (continuous) at points X (...,2)."""
         M2 = self.mahalanobis2(X)
         const = 1.0 / (2.0 * np.pi * np.sqrt(self.det))
-        return const * np.exp(-0.5 * M2)
+        return const * np.exp(
+            -0.5 * M2
+        )  # this is the probability density function of the bivariate Gaussian
 
     def whiten(self, X):
-        """z = L^{-1}(x - mu) with LL^T = Sigma."""
+        """
+        Perform whitening transformation, so mean becomes 0 and covariance becomes identity matrix.
+        z = L^{-1}(x - mu) with LL^T = Sigma."""
         X = np.asarray(X, float)
         return np.linalg.solve(self.chol, (X - self.mu).T).T
 
     def ellipse(self, ax, p=0.95, **kw):
-        """Add a confidence ellipse for mass p."""
-        # Try SciPy, fallback to common quantiles if missing
-        try:
-            from scipy.stats import chi2  # type: ignore
+        """Add a confidence ellipse for mass p.
+        The confidence ellipse is the region that contains p of the data.
+        """
+        c = float(
+            chi2.ppf(p, df=2)
+        )  # confidence level for a chi-squared distribution with 2 degrees of freedom
 
-            c = float(chi2.ppf(p, df=2))
-        except Exception:
-            lookup = {
-                0.50: 1.386,
-                0.68: 2.279,
-                0.90: 4.605,
-                0.95: 5.991,
-                0.99: 9.210,
-                0.997: 11.829,
-            }
-            c = lookup.get(p, 5.991)
+        width, height = 2 * np.sqrt(
+            c * self.evals
+        )  # width and height of the ellipse are scaled by eigenvalues and confidence level
 
-        evals, evecs = np.linalg.eigh(self.Sigma)
-        order = evals.argsort()[::-1]
-        evals, evecs = evals[order], evecs[:, order]
-        width, height = 2 * np.sqrt(c * evals)
-        angle = np.degrees(np.arctan2(evecs[1, 0], evecs[0, 0]))
+        angle = np.degrees(
+            np.arctan2(self.evecs[1, 0], self.evecs[0, 0])
+        )  # angle of the ellipse is the angle of the eigenvector
+
         e = Ellipse(
             xy=self.mu, width=width, height=height, angle=angle, fill=False, **kw
         )
@@ -93,8 +89,8 @@ class Gaussian2D:
         return e
 
 
-class BivariateGrid:
-    """Holds (U, V, Z) and provides statistical utilities with no repetition."""
+class BivariateDiagnosis:
+    """Holds (U, V, Z) and provides statistical utilities."""
 
     def __init__(self, U: np.ndarray, V: np.ndarray, Z: np.ndarray):
         self.U = np.asarray(U)
@@ -107,26 +103,6 @@ class BivariateGrid:
         self.X_grid = np.stack([self.UU, self.VV], axis=-1)  # (|V|,|U|,2)
         self.X = self.X_grid.reshape(-1, 2)  # (Ncells,2)
         self.w = self.P.reshape(-1)  # (Ncells,)
-
-    # ---- moments / Gaussian fit ----
-    def mean_cov(self):
-        mu_u = (self.P * self.UU).sum()
-        mu_v = (self.P * self.VV).sum()
-        du, dv = self.UU - mu_u, self.VV - mu_v
-        cov_uu = (self.P * du * du).sum()
-        cov_vv = (self.P * dv * dv).sum()
-        cov_uv = (self.P * du * dv).sum()
-        mu = np.array([mu_u, mu_v])
-        Sigma = np.array([[cov_uu, cov_uv], [cov_uv, cov_vv]])
-        return mu, Sigma
-
-    def gaussian_from_grid(self, return_eigendecomp=False):
-        mu, Sigma = self.mean_cov()
-        if not return_eigendecomp:
-            return mu, Sigma
-        evals, evecs = np.linalg.eigh(Sigma)
-        order = evals.argsort()[::-1]
-        return mu, Sigma, evals[order], evecs[:, order]
 
     # ---- discretize a Gaussian on this grid's support ----
     def discretize_gaussian(self, gauss: Gaussian2D, restrict_to_support=True):
@@ -209,34 +185,8 @@ class BivariateGrid:
             weights=w,
         )
 
-    # ---- builder for Z from AnalyticalResult (keeps original logic) ----
-    @classmethod
-    def from_analytical(cls, ar, N, sizes):
-        sizes = list(sizes)
-        m, S = len(sizes), sum(sizes)
-        nmax, nmin = max(sizes), min(sizes)
-        U = np.arange(nmax, min(N, S) + 1)
-        V = np.arange(0, nmin + 1)
-        den = prod(comb(N, n) for n in sizes)
-        Z = np.zeros((len(V), len(U)), float)
-        total_cases = 0
 
-        for iv, v in enumerate(V):
-            u_lo = max(nmax, (S - v + (m - 2)) // (m - 1))
-            u_hi = min(N, S - (m - 1) * v)
-            if u_lo > u_hi:
-                continue
-            for u in range(u_lo, u_hi + 1):
-                cases = ar.bivariate_cases(u, v)
-                total_cases += cases
-                if cases:
-                    Z[iv, u - U[0]] = cases / den
-
-        grid = cls(U, V, Z)
-        return grid, float(Z.sum()), (total_cases == den)
-
-
-def compare_distributions(P, Q, eps=1e-300):
+def compare_two_distributions(P, Q, eps=1e-300):
     P = P / P.sum()
     Q = Q / Q.sum()
     Qc = np.clip(Q, eps, None)

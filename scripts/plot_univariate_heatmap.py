@@ -2,7 +2,7 @@ from occenv.constants import FIGURE_DIR
 from occenv.analytical_univariate import AnalyticalUnivariate
 from occenv.analytical_bivariate import AnalyticalBivariate
 from occenv.approximated import ApproximatedResult
-from occenv.plotting_3d import create_heatmap
+from occenv.plotting_3d import plot_heatmap
 import numpy as np
 
 N = 10
@@ -57,7 +57,7 @@ plot_dict = {
 }
 
 for key, value in plot_dict.items():
-    create_heatmap(
+    plot_heatmap(
         x=x,
         y=y,
         z=value["z"],
