@@ -61,7 +61,7 @@ pip install -e ".[dev]"
 
 ---
 
-## Run plots
+## Run plots for analytical results
 
 ### For univariate distributions
 
