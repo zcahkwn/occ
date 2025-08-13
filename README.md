@@ -75,12 +75,14 @@ Plot the heatmap for different combinations of $n_1,n_2$ (when $m=2$), when unio
 python scripts/plot_univariate_heatmap.py
 ```
 
-### For bivariate distributions
+### For bivariate distribution
 
 Plot the bivariate distribution of P(union=X, intersection=Y)  
 ```
 python scripts/plot_bivariate.py
 ```
+
+### For Jaccard index distribution
 
 Plot the PMF of Jaccard Index
 ```
@@ -93,7 +95,7 @@ python scripts/plot_jaccard.py
 ## Run tests
 
 ### Monte Carlo simulation VS analytical results 
-Test for the following distributions:
+Test for the 3 distributions:
 1. univariate 
 2. bivariate 
 3. jaccard index 
