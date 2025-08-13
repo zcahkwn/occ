@@ -67,12 +67,12 @@ pip install -e ".[dev]"
 
 Plot the PMF and its normal approximation of P(union=X) and P(intersection=Y)
 ```
-python scripts/plot_pmf.py
+python scripts/plot_univariate_pmf.py
 ```
 
 Plot the heatmap for different combinations of $n_1,n_2$ (when $m=2$), when union / intersection values are fixed
 ```
-python scripts/plot_univariate_heatmap.py
+python scripts/plot_2_parties_heatmap.py
 ```
 
 ### For bivariate distribution
@@ -86,7 +86,7 @@ python scripts/plot_bivariate.py
 
 Plot the PMF of Jaccard Index
 ```
-python scripts/plot_jaccard.py
+python scripts/plot_jaccard_pmf.py
 ```
 
 
