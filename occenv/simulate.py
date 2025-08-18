@@ -1,6 +1,6 @@
-import itertools
 from joblib import Parallel, delayed
 from occenv.env import DataShare
+from collections import Counter
 
 
 class Simulate:
@@ -9,66 +9,72 @@ class Simulate:
         self.shard_sizes = shard_sizes
         self.m = len(shard_sizes)
 
-    def simulate_overlap_once(self) -> dict[tuple[int, ...], float]:
+    def simulate_bivariate_once(self) -> tuple[int, int]:
         """
-        Compute the number of intersection for every combination of shards.
-        Returns a dictionary where each key is a tuple of shard indices (e.g. (0,1)) and the value is the number of elements in the intersection of those shards.
+        Single run → (U, V) for ALL shards:
+        U = union size, V = intersection size.
         """
-        new_mpc = DataShare(self.total_number)
-        shards = [new_mpc.create_shard(shard_size) for shard_size in self.shard_sizes]
-        overlaps = {}
-        for k in range(1, self.m + 1):
-            for combo in itertools.combinations(range(self.m), k):
-                current_intersection = set(shards[combo[0]])
-                for i in combo[1:]:
-                    current_intersection &= set(shards[i])
-                overlaps[combo] = len(current_intersection) / self.total_number
-        return overlaps
+        if self.m == 0:
+            return (0, 0)
 
-    def simulate_overlap_repeat(self, repeat: int) -> dict[tuple[int, ...], float]:
+        new_mpc = DataShare(self.total_number)
+        shards = [set(new_mpc.create_shard(s)) for s in self.shard_sizes]
+        U = len(set().union(*shards))
+        V = len(set.intersection(*shards))
+        return U, V
+
+    def simulate_bivariate_repeat(
+        self, repeat: int, block: int = 10_000
+    ) -> dict[tuple[int, int], float]:
         """
-        Simulate repeat times and return the results using Joblib for parallel processing.
+        Bivariate PMF over (U, V): {(U, V): probability}.
+        Runs in blocks to avoid storing all raw samples.
         """
-        results = Parallel(n_jobs=-1)(
-            delayed(self.simulate_overlap_once)() for _ in range(repeat)
+
+        def run_block(n: int) -> Counter:
+            c = Counter()
+            for _ in range(n):
+                c[self.simulate_bivariate_once()] += 1
+            return c
+
+        q, r = divmod(repeat, block)
+        blocks = [block] * q + ([r] if r else [])
+        parts = Parallel(n_jobs=-1)(delayed(run_block)(n) for n in blocks)
+
+        total = Counter()
+        for part in parts:
+            total.update(part)
+
+        return {uv: cnt / repeat for uv, cnt in total.items()}
+
+    def simulate_union_once(self) -> int:
+        U, _ = self.simulate_bivariate_once()
+        return U
+
+    def simulate_union_repeat(self, repeat: int) -> list[int]:
+        return Parallel(n_jobs=-1)(
+            delayed(self.simulate_union_once)() for _ in range(repeat)
         )
 
-        aggregate: dict[tuple[int, ...], list[int]] = {}
-        for result in results:
-            for combo, value in result.items():
-                aggregate.setdefault(combo, []).append(value)
+    def simulate_intersection_once(self) -> int:
+        _, V = self.simulate_bivariate_once()
+        return V
 
-        averages = {
-            combo: sum(values) / len(values) for combo, values in aggregate.items()
-        }
-        return averages
-
-    def simulate_collusion_once(self) -> int:
-        new_mpc = DataShare(self.total_number)
-        elements_covered = []
-        for shard_size in self.shard_sizes:
-            elements_covered.extend(new_mpc.create_shard(shard_size))
-
-        return len(set(elements_covered))
-
-    def simulate_collusion_repeat(self, repeat: int, **kwargs) -> list[int]:
-        """
-        Simulate repeat times and return the results using Joblib for parallel processing.
-        """
+    def simulate_intersection_repeat(self, repeat: int) -> list[int]:
         return Parallel(n_jobs=-1)(
-            delayed(self.simulate_collusion_once)(**kwargs) for _ in range(repeat)
+            delayed(self.simulate_intersection_once)() for _ in range(repeat)
         )
 
 
 if __name__ == "__main__":
-    total_number = 10
-    shard_sizes = [5, 6, 9]
+    total_number = 100
+    shard_sizes = [50, 63, 75]
+
     simulator = Simulate(total_number, shard_sizes)
+    repeat = int(1e6)
 
-    repeat = int(1e5)
-    collusion = simulator.simulate_collusion_repeat(repeat)
-    print(sum(collusion) / repeat)
-    overlap_number = simulator.simulate_overlap_repeat(repeat)
+    union = simulator.simulate_union_repeat(repeat)
+    print("The average union is ", sum(union) / repeat)
 
-    for combo, avg in sorted(overlap_number.items()):
-        print(f"Combination {combo}: Average intersection = {avg}")
+    intersection = simulator.simulate_intersection_repeat(repeat)
+    print("The average intersection is ", sum(intersection) / repeat)
