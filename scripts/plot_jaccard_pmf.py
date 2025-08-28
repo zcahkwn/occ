@@ -15,9 +15,12 @@ from occenv.utils import (
     discretize_normal_pmf,
 )
 from occenv.plotting_2d import plot_hist_with_normal, plot_stem_pmf
+from occenv.constants import FIGURE_DIR
 
-N = 300
-shard_sizes = [250, 220, 150]
+N = 100
+alpha = (0.3, 0.4, 0.5)
+m = len(alpha)
+shard_sizes = tuple(int(N * a) for a in alpha)
 ar = AnalyticalBivariate(N, shard_sizes)
 analytical = AnalyticalJaccard(N, shard_sizes, ar)
 
@@ -51,26 +54,27 @@ plot_hist_with_normal(
     sd,
     jaccard_mu_approx,
     jaccard_sd_approx,
-    title=f"Jaccard Index – Histogram vs Normal fit (N={N}, shards={shard_sizes})",
+    title=f"Jaccard Index – Histogram vs Normal fit (N={N}, $S_{m}$={shard_sizes})",
     xlabel="Jaccard index",
     bins=200,
+    save_path=f"{FIGURE_DIR}/jaccard_{N}.png",
 )
 
-plot_stem_pmf(
-    jaccard_list,
-    prob_jaccard_list,
-    title=f"Jaccard – Stem PMF (N={N}, shards={shard_sizes})",
-    xlabel="Jaccard index",
-    vlines=[
-        (mu, f"mean of empirical pmf={mu:.2f}", "b", "-"),
-        (
-            jaccard_mu_approx,
-            f"approximated expected Jaccard = {jaccard_mu_approx:.3f}",
-            "r",
-            "--",
-        ),
-    ],
-)
+# plot_stem_pmf(
+#     jaccard_list,
+#     prob_jaccard_list,
+#     title=f"Jaccard – Stem PMF (N={N}, shards={shard_sizes})",
+#     xlabel="Jaccard index",
+#     vlines=[
+#         (mu, f"mean of empirical pmf={mu:.2f}", "b", "-"),
+#         (
+#             jaccard_mu_approx,
+#             f"approximated expected Jaccard = {jaccard_mu_approx:.3f}",
+#             "r",
+#             "--",
+#         ),
+#     ],
+# )
 
 # --- Calculate the mae and sse of the empirical pmf and the approximated normal distribution ---
 pmf_norm = discretize_normal_pmf(jaccard_list, mu, sd)

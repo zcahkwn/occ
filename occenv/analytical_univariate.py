@@ -4,7 +4,7 @@ from occenv.utils import mu_calculation, var_calculation
 
 
 class AnalyticalUnivariate:
-    def __init__(self, total_number: int, shard_sizes: list[int]):
+    def __init__(self, total_number: int, shard_sizes: tuple[int]):
         self.total_number = total_number
         self.shard_sizes = shard_sizes
         self.party_number = len(shard_sizes)
@@ -17,7 +17,9 @@ class AnalyticalUnivariate:
         if sum(self.shard_sizes) < number_covered:
             return 0
 
-        def union_cases_recursive(number_covered: int, shard_sizes_m: list[int]) -> int:
+        def union_cases_recursive(
+            number_covered: int, shard_sizes_m: tuple[int]
+        ) -> int:
 
             last_shard = shard_sizes_m[-1]
             rest_shard = shard_sizes_m[:-1]
@@ -26,7 +28,7 @@ class AnalyticalUnivariate:
                 * comb(number_covered, k)
                 * (union_cases_recursive(k, rest_shard) if rest_shard else 1)
                 for k in np.arange(
-                    start=max(rest_shard + [number_covered - last_shard, 0]),
+                    start=max(rest_shard + (number_covered - last_shard, 0)),
                     stop=min(sum(rest_shard), number_covered) + 1,
                     step=1,
                 )
@@ -66,7 +68,7 @@ class AnalyticalUnivariate:
             return 0.0
 
         def intersect_cases_recursive(
-            number_intersect: int, shard_sizes_m: list[int]
+            number_intersect: int, shard_sizes_m: tuple[int]
         ) -> int:
             if not shard_sizes_m:
                 # base case: intersection of zero parties is N

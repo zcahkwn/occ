@@ -101,18 +101,18 @@ Test for the 3 distributions:
 3. jaccard index 
 
 ```
-pytest test_univariate_prob.py test_bivariate_prob.py test_jaccard.py
+pytest tests/test_univariate_prob.py tests/test_bivariate_prob.py tests/test_jaccard.py
 ```
 
 ### Analytical results sanity check
 Test whether the marginal probabilities of bivariate distribution adds up
 ```
-pytest test_marginal.py
+pytest tests/test_marginal.py
 ```
 
 ### Analytical result VS Approximated result (using CLT)
 ```
-pytest test_approx.py
+pytest tests/test_approx.py
 ```
 
 

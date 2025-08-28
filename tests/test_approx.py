@@ -12,10 +12,10 @@ from occenv.analytical_jaccard import AnalyticalJaccard
 @pytest.mark.parametrize(
     "total_number, shard_sizes",
     [
-        (100, [10, 20, 30]),
-        (100, [10, 20, 30, 40]),
-        (100, [40, 50]),
-        (200, [100, 100, 100]),
+        (100, (10, 20, 30)),
+        (100, (10, 20, 30, 40)),
+        (100, (40, 50)),
+        (200, (100, 100, 100)),
     ],
 )
 def test_approx(total_number, shard_sizes):

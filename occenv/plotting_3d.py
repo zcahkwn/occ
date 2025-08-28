@@ -18,9 +18,9 @@ def plot_heatmap(x, y, z, xlabel, ylabel, title, cmap, vmin, vmax, outpath=None)
     plt.show()
 
 
-def plot_heatmap_ellipse(U, V, Z, mu, Sigma, outpath=None, title=None):
+def plot_heatmap_ellipse(U, V, Z, mu, Sigma, color_map, outpath=None, title=None):
     """
-    Heatmap of P(U=u, V=v) with log colour scale (zeros shown as darkest blue),
+    Heatmap of P(U=u, V=v) with log colour scale (zeros shown as black),
     plus Gaussian mean marker and confidence ellipses derived from the grid.
     """
     Z = np.asarray(Z, float)
@@ -29,9 +29,9 @@ def plot_heatmap_ellipse(U, V, Z, mu, Sigma, outpath=None, title=None):
         raise ValueError("All probabilities are zero; nothing to plot on log scale.")
     vmin, vmax = pos.min(), pos.max()
 
-    # Set up the colormap (zeros are marked as darkest blue)
+    # Set up the colormap (zeros are marked as black)
     Z_plot = np.ma.masked_where(Z <= 0, Z)  # Mask out zeros
-    cmap = plt.get_cmap("viridis").copy()
+    cmap = plt.get_cmap(color_map).copy()
     cmap.set_bad(cmap(0.0))
     fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True)
 
@@ -43,15 +43,15 @@ def plot_heatmap_ellipse(U, V, Z, mu, Sigma, outpath=None, title=None):
         norm=LogNorm(vmin=vmin, vmax=vmax),
         cmap=cmap,
     )
-    ax.plot(*mu, marker="+", ms=12, mew=2, color="white")  # mean marker
+    ax.plot(*mu, marker="+", ms=12, mew=2, color="gray")  # mean marker
 
     # Confidence ellipses
     gauss = Gaussian2D(mu, Sigma)
     for p, ls, lw in [(0.68, "-", 1.8), (0.95, "--", 1.4), (0.997, ":", 1.2)]:
-        gauss.ellipse(ax, p=p, edgecolor="white", linestyle=ls, linewidth=lw)
+        gauss.ellipse(ax, p=p, edgecolor="gray", linestyle=ls, linewidth=lw)
 
-    fig.colorbar(im, ax=ax, label="Probability  P(U=u, V=v)")
-    ax.set(xlabel="Union size  u", ylabel="Intersection size  v", title=title)
+    fig.colorbar(im, ax=ax, label="Probability  P(X=u, Y=v)")
+    ax.set(xlabel="Union size  ($u$)", ylabel="Intersection size  ($v$)", title=title)
     if outpath:
         fig.savefig(outpath, dpi=200)
     plt.show()
@@ -96,12 +96,12 @@ def plot_surface_3d(U, V, Z, title, log_colors=True):
 
     m = mpl.cm.ScalarMappable(norm=norm, cmap=cmap)
     m.set_array([])
-    fig.colorbar(m, ax=ax, shrink=0.7, pad=0.05, label=r"$P(U=u,V=v)$")
+    fig.colorbar(m, ax=ax, shrink=0.7, pad=0.05, label=r"$P(X=u,Y=v)$")
 
     ax.set(
-        xlabel="Union size  u",
-        ylabel="Intersection size  v",
-        zlabel=r"$P(U=u,V=v)$",
+        xlabel="Union size  ($u$)",
+        ylabel="Intersection size  ($v$)",
+        zlabel=r"$P(X=u,Y=v)$",
         title=title,
     )
     ax.view_init(elev=35, azim=-135)
@@ -121,15 +121,15 @@ def plot_surface_plotly(U, V, Z, title):
                 y=VV,
                 z=Z,
                 colorscale="Viridis",
-                colorbar=dict(title="P(U=u,V=v)"),
+                colorbar=dict(title="P(X=u,Y=v)"),
                 hovertemplate="u=%{x}<br>v=%{y}<br>P=%{z:.3e}<extra></extra>",
             )
         ]
     )
     fig.update_scenes(
-        xaxis_title="Union size u",
-        yaxis_title="Intersection size v",
-        zaxis_title="P(U=u,V=v)",
+        xaxis_title="Union size ($u$)",
+        yaxis_title="Intersection size ($v$)",
+        zaxis_title="P(X=u,Y=v)",
     )
     fig.update_layout(title=title, width=800, height=600)
     fig.show()

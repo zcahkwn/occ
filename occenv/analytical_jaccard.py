@@ -6,7 +6,7 @@ import itertools
 
 class AnalyticalJaccard:
     def __init__(
-        self, total_number: int, shard_sizes: list[int], ar: AnalyticalBivariate
+        self, total_number: int, shard_sizes: tuple[int], ar: AnalyticalBivariate
     ):
         self.total_number = total_number
         self.shard_sizes = shard_sizes
@@ -70,7 +70,7 @@ class AnalyticalJaccard:
         # Sum over all reduced fractions v/u with v/u < t
         for u in range(1, self.total_number + 1):
             # v must be <= min(u, nmin) to be feasible
-            upper_v = min([u] + self.shard_sizes)
+            upper_v = min(u, *self.shard_sizes)
             for v in range(1, upper_v + 1):
                 if math.gcd(v, u) != 1:
                     continue

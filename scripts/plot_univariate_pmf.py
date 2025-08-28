@@ -16,8 +16,9 @@ from occenv.utils import (
 from occenv.plotting_2d import plot_line_graph, plot_pmf_with_normals
 from occenv.approximated import ApproximatedResult
 
-N = 200
-shard_sizes = [100, 100, 100]
+N = 10
+shard_sizes = (3, 4, 5)
+m = len(shard_sizes)
 
 analytical = AnalyticalUnivariate(N, shard_sizes)
 approx = ApproximatedResult(N, shard_sizes)
@@ -25,12 +26,12 @@ approx = ApproximatedResult(N, shard_sizes)
 numbers_range = np.arange(0, N + 1, 1)
 x_continuous = np.linspace(min(numbers_range) - 1, max(numbers_range) + 1, 500)
 
-problems = ["union", "intersection"]
+problems = {"Union": "u", "Intersection": "v"}
 
-for problem in problems:
+for problem, label in problems.items():
     # Calculate the PMF for the problem
     pmf = []
-    prob_method = getattr(analytical, f"{problem}_prob")
+    prob_method = getattr(analytical, f"{problem.lower()}_prob")
     for number_in_range in numbers_range:
         probability = prob_method(number_in_range)
         pmf.append(probability)
@@ -41,8 +42,8 @@ for problem in problems:
     normal_analytical = norm_pdf(x_continuous, mu_analytical, sigma_analytical)
 
     # Calculate the approximated mean and standard deviation of the discrete PMF (using CLT)
-    mu_approx_method = getattr(approx, f"{problem}_mu_approx")
-    sd_approx_method = getattr(approx, f"{problem}_sd_approx")
+    mu_approx_method = getattr(approx, f"{problem.lower()}_mu_approx")
+    sd_approx_method = getattr(approx, f"{problem.lower()}_sd_approx")
     mu_approx = mu_approx_method()
     sd_approx = sd_approx_method()
     normal_approx = norm_pdf(x_continuous, mu_approx, sd_approx)
@@ -60,7 +61,8 @@ for problem in problems:
         sigma_analytical,
         mu_approx,
         sd_approx,
-        title=f"PMF for N={N},$S_{len(shard_sizes)}$={shard_sizes}",
+        xlabel=f"{label}",
+        title=f"PMF for N={N},$S_{m}$={shard_sizes}",
     )
 
     # Compare the approximated mean and standard deviation with the analytical mean and standard deviation
@@ -78,12 +80,12 @@ for problem in problems:
     plot_line_graph(
         numbers_range,
         ccdf,
-        f"{problem} CCDF for N={N}, $S_{len(shard_sizes)}$={shard_sizes}",
-        f"{problem} size ($N'$)",
+        title=f"{problem} CCDF for N={N}, $S_{m}$={shard_sizes}",
+        xlabel="k",
     )
-    plot_line_graph(
-        numbers_range,
-        cdf,
-        f"{problem} CDF for N={N}, $S_{len(shard_sizes)}$={shard_sizes}",
-        f"{problem} size ($N'$)",
-    )
+    # plot_line_graph(
+    #     numbers_range,
+    #     cdf,
+    #     title=f"{problem} CDF for N={N}, $S_{m}$={shard_sizes}",
+    #     xlabel="k",
+    # )

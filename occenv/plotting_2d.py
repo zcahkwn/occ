@@ -16,6 +16,7 @@ def plot_pmf_with_normals(
     sigma,
     mu_approx,
     sd_approx,
+    xlabel,
     title,
     save_path=None,
 ):
@@ -35,8 +36,8 @@ def plot_pmf_with_normals(
         label="Approximated normal distribution",
     )
     plt.legend()
-    plt.xlabel("$N'$")
-    plt.ylabel("$P(X=N')$")
+    plt.xlabel(xlabel)
+    plt.ylabel(f"$P(X={xlabel})$")
     plt.title(title)
     plt.grid(True)
     plt.tight_layout()
@@ -48,7 +49,7 @@ def plot_pmf_with_normals(
 def plot_line_graph(x_values, pmf, title, xlabel, save_path=None):
     plt.plot(x_values, pmf, marker="o")
     plt.xlabel(xlabel)
-    plt.ylabel("P(X ≥ x)")
+    plt.ylabel(f"$P(X ≥ {xlabel})$")
     plt.title(title)
     plt.grid(True)
     if save_path:
@@ -91,7 +92,7 @@ def plot_hist_with_normal(
         plt.plot(
             x_grid,
             norm_pdf,
-            label=f"normal pdf (μ={mu:.2f}, σ={sigma:.2f})",
+            label=f"normal pdf (μ={mu:.4f}, σ={sigma:.4f})",
             color="b",
             linestyle="-",
         )
@@ -104,7 +105,7 @@ def plot_hist_with_normal(
         plt.plot(
             x_grid,
             norm_pdf_approx,
-            label=f"approximated normal pdf (μ={mu_approx:.2f}, σ={sigma_approx:.2f})",
+            label=f"approximated normal pdf (μ={mu_approx:.4f}, σ={sigma_approx:.4f})",
             color="r",
             linestyle="--",
         )

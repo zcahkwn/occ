@@ -4,13 +4,15 @@ This script is used to demonstrate the analytical results of the occenv.analytic
 
 from occenv.analytical_univariate import AnalyticalUnivariate
 from occenv.analytical_bivariate import AnalyticalBivariate
+from occenv.analytical_jaccard import AnalyticalJaccard
 from occenv.approximated import ApproximatedResult
 
 N = 10
-shard_sizes = [7, 9]
+shard_sizes = (7, 9)
 print(f"The total number is {N} and the shard sizes are {shard_sizes}")
 compute_univariate = AnalyticalUnivariate(N, shard_sizes)
 compute_bivariate = AnalyticalBivariate(N, shard_sizes)
+compute_jaccard = AnalyticalJaccard(N, shard_sizes, compute_bivariate)
 compute_approximated = ApproximatedResult(N, shard_sizes)
 
 # Calculate union and intersect probability
@@ -47,7 +49,7 @@ print(f"bivariate probability for {union_test, intersect_test} = {bivariate_prob
 
 # Calculate Jaccard index
 pair = (58, 12)
-jaccard_prob = compute_bivariate.jaccard_prob(6, 29)
+jaccard_prob = compute_jaccard.jaccard_prob(6, 29)
 print(
     f"------Test Jaccard index------\nJaccard probability for {6, 29} = {jaccard_prob}"
 )

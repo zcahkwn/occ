@@ -10,10 +10,10 @@ from occenv.analytical_bivariate import AnalyticalBivariate
 @pytest.mark.parametrize(
     "shard_sizes, target_uv",
     [
-        ([30, 35], (50, 20)),
-        ([60, 10], (60, 10)),
-        ([70, 20], (70, 15)),
-        ([50, 30], (60, 10)),
+        ((30, 35), (50, 20)),
+        ((60, 10), (60, 10)),
+        ((70, 20), (70, 15)),
+        ((50, 30), (60, 10)),
     ],
 )
 def test_bivariate_event_probability(shard_sizes, target_uv):
