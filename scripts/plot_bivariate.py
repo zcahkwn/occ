@@ -7,8 +7,8 @@ from occenv.plotting_3d import (
 )
 from occenv.utils_bivariate import Gaussian2D
 
-N = 200
-shard_sizes = [150, 140, 160]
+N = 100
+shard_sizes = (90, 90, 90)
 
 # Build grid (U, V, Z) from the analytical model
 ar = AnalyticalBivariate(total_number=N, shard_sizes=shard_sizes)
@@ -24,25 +24,25 @@ plot_heatmap_ellipse(
     Z_vals,
     mu,
     Sigma,
-    FIGURE_DIR / f"bivariate_heatmap_N{N}_sizes{'-'.join(map(str, shard_sizes))}.png",
+    color_map="hot_r",
     title=f"Bivariate distribution for N={N}, sizes={shard_sizes}",
 )
 
-# Plot 3D surface
-plot_surface_3d(
-    U_vals,
-    V_vals,
-    Z_vals,
-    title=f"Bivariate distribution for N={N}, sizes={shard_sizes} — 3D",
-)
+## Plot 3D surface
+# plot_surface_3d(
+#     U_vals,
+#     V_vals,
+#     Z_vals,
+#     title=f"Bivariate distribution for N={N}, sizes={shard_sizes} — 3D",
+# )
 
-# Plot 3D surface (interactive)
-plot_surface_plotly(
-    U_vals,
-    V_vals,
-    Z_vals,
-    title=f"Bivariate distribution for N={N}, sizes={shard_sizes} — 3D (interactive)",
-)
+## Plot 3D surface (interactive)
+# plot_surface_plotly(
+#     U_vals,
+#     V_vals,
+#     Z_vals,
+#     title=f"Bivariate distribution for N={N}, sizes={shard_sizes} — 3D (interactive)",
+# )
 
 # Print mean vector, covariance matrix, eigenvalues and eigenvectors
 print("mu =", mu)

@@ -11,9 +11,9 @@ from occenv.analytical_bivariate import AnalyticalBivariate
 @pytest.mark.parametrize(
     "total_number, shard_sizes, thresholds",
     [
-        (100, [30, 35], [0.2, 0.3, 0.4, 0.5]),
-        (80, [20, 25], [0.25, 0.4, 0.5]),
-        (60, [15, 20], [0.2, 0.33, 0.5]),
+        (100, (30, 35), [0.2, 0.3, 0.4, 0.5]),
+        (80, (20, 25), [0.25, 0.4, 0.5]),
+        (60, (15, 20), [0.2, 0.33, 0.5]),
     ],
 )
 def test_jaccard_cdf(total_number, shard_sizes, thresholds):

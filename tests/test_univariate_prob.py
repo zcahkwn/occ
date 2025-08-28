@@ -16,15 +16,15 @@ from occenv.utils import mu_calculation, var_calculation
 @pytest.mark.parametrize(
     "shard_sizes",
     [
-        # [7, 9],
-        # [7],
-        # [10],
-        # [6, 3],
-        [5, 6],
-        [10, 6],
-        [3, 2, 4],
-        [7, 6, 9],
-        [3, 5, 7, 3],
+        # (7, 9),
+        # (7),
+        # (10),
+        # (6, 3),
+        (5, 6),
+        (10, 6),
+        (3, 2, 4),
+        (7, 6, 9),
+        (3, 5, 7, 3),
     ],
 )
 def test_univariate_pmf_and_mean(shard_sizes):

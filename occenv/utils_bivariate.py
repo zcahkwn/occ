@@ -1,5 +1,4 @@
 import numpy as np
-from math import comb, prod
 from matplotlib.patches import Ellipse
 from scipy.stats import chi2
 

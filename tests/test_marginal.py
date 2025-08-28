@@ -12,10 +12,10 @@ import random
 @pytest.mark.parametrize(
     "shard_sizes",
     [
-        [50],
-        [50, 40],
-        [50, 50, 40],
-        [50, 50, 50, 50],
+        (50,),
+        (50, 40),
+        (50, 50, 40),
+        (50, 50, 50, 50),
     ],
 )
 def test_bivariate_marginals_match_univariate(shard_sizes):
